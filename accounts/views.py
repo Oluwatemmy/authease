@@ -1,10 +1,12 @@
 from django.shortcuts import render
 from rest_framework.response import Response
-from .serilaizers import UserRegisterSerializer
+from .serilaizers import UserRegisterSerializer, LoginSerializer
 from rest_framework.generics import GenericAPIView
 from rest_framework import status
 from .utils import send_code_to_user
 from .models import OneTimePassword
+from rest_framework.permissions import IsAuthenticated
+
 
 
 # Create your views here.
@@ -56,3 +58,26 @@ class VerifyUserEmail(GenericAPIView):
             return Response(
                 {"message": "Passcode does not exist"}, status=status.HTTP_404_NOT_FOUND
             )
+
+
+class LoginUserView(GenericAPIView):
+    serializer_class = LoginSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class TestAuthenticationView(GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        data = {
+            "message": "Hello, authenticated user!"
+        }
+
+        return Response(data, status=status.HTTP_200_OK)
+
+
+
