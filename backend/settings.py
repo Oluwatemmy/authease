@@ -30,8 +30,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # 3rd Party
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
+    'rest_framework_swagger',
+    'drf_yasg',
+    # apps
     'accounts',
     'social_accounts',
     'corsheaders',
@@ -157,3 +161,18 @@ SIMPLE_JWT = {
 GOOGLE_CLIENT_ID = env("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = env("GOOGLE_CLIENT_SECRET")
 SOCIAL_AUTH_PASSWORD = env("SOCIAL_AUTH_PASSWORD")
+
+SWAGGER_SETTNGS = {
+    "ENABLED_METHODS": ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    "USE_SESSION_AUTH": True,
+    "relative_paths": False,
+    "DISPLAY_OPERATION_ID": False,
+    "SECURITY_DEFINITONS": {
+        "Bearer": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+        
+    }
+}
