@@ -1,6 +1,10 @@
 import React, { useState } from 'react'
+import axios from 'axios'
+import { useNavigate } from 'react-router-dom'
+import { toast } from 'react-toastify'
 
 const Signup = () => {
+    const navigate = useNavigate()
 
     const [formdata, setFormData]=useState({
         email:'',
@@ -18,12 +22,23 @@ const Signup = () => {
 
     const {email, first_name, last_name, password, confirm_password}=formdata
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault()
         if(!email || !first_name || !last_name || !password || !confirm_password) {
             setError("Please fill all the fields")
         }else{
             console.log(formdata)
+            // make call to api
+            const res = await axios.post('http://localhost:8000/api/v1/auth/register/', formdata)
+            // check our responses
+            const response = res.data
+            console.log(response)
+            if (res.status === 201) {
+                // redirect to verifyemail component
+                navigate("/otp/verify")
+                toast.success(response.message)
+            }
+            // server error pass to error
         }
     }
     console.log(error)
