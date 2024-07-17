@@ -156,23 +156,24 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "AUTH_HEADER_TYPES": ("Bearer",),
     "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,
+    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
+    "TOKEN_TYPE_CLAIM": "token_type",
+    "JTI_CLAIM": "jti",
 }
 
 GOOGLE_CLIENT_ID = env("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = env("GOOGLE_CLIENT_SECRET")
 SOCIAL_AUTH_PASSWORD = env("SOCIAL_AUTH_PASSWORD")
 
-SWAGGER_SETTNGS = {
-    "ENABLED_METHODS": ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+SWAGGER_SETTINGS = {
+    "ENABLED_METHODS": ["GET", "POST", "PUT", "PATCH", "DELETE"],
     "USE_SESSION_AUTH": True,
     "relative_paths": False,
     "DISPLAY_OPERATION_ID": False,
-    "SECURITY_DEFINITONS": {
-        "Bearer": {
-            "type": "apiKey",
-            "name": "Authorization",
-            "in": "header"
-        }
-        
-    }
+    "SECURITY_DEFINITIONS": {
+        "Basic": {"type": "basic"},
+        "Bearer": {"type": "apiKey", "name": "Authorization", "in": "header"},
+    },
 }
