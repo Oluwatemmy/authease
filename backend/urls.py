@@ -22,11 +22,13 @@ schema_view = get_schema_view(
     permission_classes=(permissions.AllowAny,),
 )
 
+URL = "api/v1/"
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("", home, name="redirect_to_docs"),
-    path('api/v1/auth/', include('accounts.urls')),
-    path('api/v1/auth/', include('social_accounts.urls')),
+    path(URL + "auth/", include('accounts.urls')),
+    path(URL + "oauth/" , include('social_accounts.urls')),
 ]
 
 if settings.DEBUG:
