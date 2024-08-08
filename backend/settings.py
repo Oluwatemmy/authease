@@ -1,11 +1,16 @@
-import environ
+import environ, os
 from pathlib import Path
 from datetime import timedelta
+from dotenv import load_dotenv
+
+from corsheaders.defaults import default_headers
 
 env = environ.Env(
     # set casting, default value
     DEBUG=(bool, False)
 )
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -32,13 +37,13 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # 3rd Party
     'rest_framework',
+    'corsheaders',
     'rest_framework_simplejwt.token_blacklist',
     'rest_framework_swagger',
     'drf_yasg',
     # apps
     'accounts',
     'social_accounts',
-    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -80,6 +85,22 @@ CORS_ALLOWED_ORIGINS=[
 CSRF_TRUSTED_ORGINS=[
     "http://localhost:3000",
     "http://localhost:5173"
+]
+
+# CORS_ALLOW_HEADERS = [
+#     "accept",
+#     "authorization",
+#     "content-type",
+#     "dnt",
+#     "origin",
+#     "user-agent",
+#     "x-csrftoken",
+#     "x-requested-with",
+# ]
+
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'Authorization',
+    'Content-Type',
 ]
 
 # Database
@@ -152,20 +173,15 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(hours=12),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=1),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "AUTH_HEADER_TYPES": ("Bearer",),
     "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
-    "ALGORITHM": "HS256",
-    "SIGNING_KEY": SECRET_KEY,
-    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
-    "TOKEN_TYPE_CLAIM": "token_type",
-    "JTI_CLAIM": "jti",
 }
 
 GOOGLE_CLIENT_ID = env("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = env("GOOGLE_CLIENT_SECRET")
-SOCIAL_AUTH_PASSWORD = env("SOCIAL_AUTH_PASSWORD")
+SOCIAL_AUTH_PASSWORD = os.environ.get("SOCIAL_AUTH_PASSWORD")
 
 SWAGGER_SETTINGS = {
     "ENABLED_METHODS": ["GET", "POST", "PUT", "PATCH", "DELETE"],

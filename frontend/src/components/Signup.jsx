@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
@@ -13,6 +13,24 @@ const Signup = () => {
         password:'',
         confirm_password:''
     })
+
+    const handleSignInWthGoogle = async (response)=>{
+        const payload = response.credential
+        const sever_res = await axios.post("http://localhost:8000/api/v1/oauth/google/", {"access_token": payload})
+        console.log(sever_res)
+    }
+
+    useEffect(() =>{
+        /* global google */
+        google.accounts.id.initialize({
+            client_id: import.meta.env.VITE_CLIENT_ID,
+            callback: handleSignInWthGoogle
+        });
+        google.accounts.id.renderButton(
+            document.getElementById('signInDiv'),
+            { theme: 'outline', size: 'large', text:"continue_with", shape:"circle", width:"280" }
+            );
+    }, [])
 
     const [error, setError]=useState("")
 
@@ -101,8 +119,7 @@ const Signup = () => {
                     <div className='githubContainer'>
                         <button>Sign up with Github</button>
                     </div>
-                    <div className='googleContainer'>
-                        <button>Sign up with Google</button>
+                    <div className='googleContainer' id='signInDiv'>
                     </div>
                 </div>
             </div>
