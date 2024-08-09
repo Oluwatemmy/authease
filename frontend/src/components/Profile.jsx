@@ -24,7 +24,7 @@ const Profile = () => {
             // if (resp.status === 200) {
             //     console.log(resp.data);
             // }
-            console.log(resp.data)
+            // console.log(resp.data)
         } catch (error) {
             console.error("Error fetching data", error);
             toast.error("Error")
