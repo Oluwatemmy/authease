@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
+import axiosInstance from '../utils/axiosInstance'
 
 const Signup = () => {
     const navigate = useNavigate()
+    const [searchparams] = useSearchParams()
 
     const [formdata, setFormData]=useState({
         email:'',
@@ -72,6 +74,41 @@ const Signup = () => {
     }
     console.log(error)
 
+const handleSignInWthGithub = () => {
+    window.location.assign(`https://github.com/login/oauth/authorize/?client_id=${import.meta.env.VITE_GITHUB_ID}`)
+}
+
+const send_code_to_backend = async () => {
+    if (searchparams) {
+        try {
+            const code = searchparams.get('code')
+            const response = await axios.post("http://localhost:8000/api/v1/oauth/github/", {"code": code})
+            const result = response.data
+            console.log(result)
+            if (response.status === 200) {
+                const user = {
+                    "email": result.email,
+                    "names": result.full_name
+                }
+            localStorage.setItem("user", JSON.stringify(user))
+            localStorage.setItem("access", JSON.stringify(result.access_token))
+            localStorage.setItem("refresh", JSON.stringify(result.refresh_token))
+            navigate("/dashboard")
+            toast.success("Login Successfull")
+            }
+        } catch (error) {
+            console.log(error)
+        }
+    }
+}
+
+let code = searchparams.get('code')
+useEffect(() => {
+    if (code) {
+        send_code_to_backend()
+    }
+}, [code])
+
     return (
         <div>
             <div className='form-container'>
@@ -128,7 +165,7 @@ const Signup = () => {
                     </form>
                     <h3 className='text-option'>Or </h3>
                     <div className='githubContainer'>
-                        <button>Sign up with Github</button>
+                        <button onClick={handleSignInWthGithub}>Sign up with Github</button>
                     </div>
                     <div className='googleContainer' id='signInDiv'>
                     </div>
