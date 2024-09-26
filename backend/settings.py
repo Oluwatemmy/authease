@@ -129,8 +129,8 @@ if DEBUG == 'False':
 AUTH_USER_MODEL="accounts.User"
 
 # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' # Test locally on console
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend' # For production stage
-# EMAIL_BACKEND='django.core.mail.bakends.locmem.EmailBackend' # For Testing in testcase
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend' # For production stage
+EMAIL_BACKEND='django.core.mail.bakends.locmem.EmailBackend' # For Testing in testcase
 
 EMAIL_HOST = 'smtp.gmail.com' 
 EMAIL_PORT = 465
