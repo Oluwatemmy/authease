@@ -120,15 +120,32 @@ REST_FRAMEWORK = {
     'NON_FIELD_ERRORS_KEY': 'error',
 }
 
+# On production disable Browseapi
+if DEBUG == 'False':
+    REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = (
+        'rest_framework.renderers.JSONRenderer',
+    )
+
 AUTH_USER_MODEL="accounts.User"
 
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' # Test locally on console
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend' # For production stage
+# EMAIL_BACKEND='django.core.mail.bakends.locmem.EmailBackend' # For Testing in testcase
 
-EMAIL_HOST = 'sandbox.smtp.mailtrap.io'
-EMAIL_HOST_USER = env('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
-EMAIL_PORT = '2525'
-DEFAULT_FROM_EMAIL = 'oluwaseyitemitope456@gmail.com'
-EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com' 
+EMAIL_PORT = 465
+EMAIL_USE_SSL = True
+EMAIL_USE_TSL = False
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER") 
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = 'quickauth00@gmail.com'  
+
+# EMAIL_HOST = 'sandbox.smtp.mailtrap.io'
+# EMAIL_HOST_USER = env('EMAIL_HOST_USER')
+# EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
+# EMAIL_PORT = '2525'
+# DEFAULT_FROM_EMAIL = 'oluwaseyitemitope456@gmail.com'
+# EMAIL_USE_TLS = True
 
 
 # Password validation

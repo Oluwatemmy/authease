@@ -7,7 +7,7 @@ from rest_framework import serializers
 from django.contrib.auth import authenticate
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import smart_str, smart_bytes, force_str
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.exceptions import AuthenticationFailed, ValidationError
 from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
@@ -144,8 +144,8 @@ class SetNewPasswordSerializer(serializers.Serializer):
 class LogoutSerializer(serializers.Serializer):
     refresh_token = serializers.CharField()
 
-    default_error_message = {
-        'bad_token': ("Token is Invalid or has expired")
+    default_error_messages = {
+        "bad_token": "Token is invalid or expired",
     }
 
     def validate(self, attrs):
@@ -158,6 +158,5 @@ class LogoutSerializer(serializers.Serializer):
             token.blacklist()
 
         except TokenError:
-            return self.fail('bad_token')
-
+            self.fail("bad_token")
 
