@@ -9,7 +9,7 @@ from django.core import mail
 
 class RegisterUserViewTests(TestCase):
     def setUp(self):
-        self.register_url = reverse('register')  # Assuming you have named your URL as 'register'
+        self.register_url = reverse('register')  # the register endpoint has been saved as 'register'
         self.valid_user_data = {
             "email": "testuser@example.com",
             "first_name": "Test",
@@ -24,6 +24,8 @@ class RegisterUserViewTests(TestCase):
             "password": "short",
             "confirm_password": "differentPassword"
         }
+
+        self.client = APIClient()
 
     def test_register_successful(self):
         """
