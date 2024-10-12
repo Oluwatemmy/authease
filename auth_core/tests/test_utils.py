@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.core import mail
-from accounts.utils import generateotp, send_code_to_user, send_normal_email
-from accounts.models import OneTimePassword, User
+from auth_core.utils import generateotp, send_code_to_user, send_normal_email
+from auth_core.models import OneTimePassword, User
 
 
 class UtilsTestCase(TestCase):

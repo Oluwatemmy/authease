@@ -5,7 +5,7 @@ from django.utils.encoding import smart_bytes
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.exceptions import ValidationError, AuthenticationFailed
-from accounts.serilaizers import *
+from auth_core.serilaizers import *
 
 
 class UserSerializerTestCase(TestCase):

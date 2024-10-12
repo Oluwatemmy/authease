@@ -1,6 +1,6 @@
 from django.test import TestCase
 from django.urls import reverse
-from accounts.models import User, OneTimePassword
+from auth_core.models import User, OneTimePassword
 from rest_framework import status
 from django.core import mail
 from rest_framework.test import APIClient

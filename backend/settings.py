@@ -42,8 +42,8 @@ INSTALLED_APPS = [
     'rest_framework_swagger',
     'drf_yasg',
     # apps
-    'accounts',
-    'social_accounts',
+    'auth_core',
+    'oauth',
 ]
 
 MIDDLEWARE = [
@@ -126,11 +126,11 @@ if DEBUG == 'False':
         'rest_framework.renderers.JSONRenderer',
     )
 
-AUTH_USER_MODEL="accounts.User"
+AUTH_USER_MODEL="auth_core.User"
 
 # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' # Test locally on console
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend' # For production stage
-EMAIL_BACKEND='django.core.mail.bakends.locmem.EmailBackend' # For Testing in testcase
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend' # For production stage
+# EMAIL_BACKEND='django.core.mail.bakends.locmem.EmailBackend' # For Testing in testcase
 
 EMAIL_HOST = 'smtp.gmail.com' 
 EMAIL_PORT = 465

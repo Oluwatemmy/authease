@@ -27,8 +27,8 @@ URL = "api/v1/"
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("", home, name="redirect_to_docs"),
-    path(URL + "auth/", include('accounts.urls')),
-    path(URL + "oauth/" , include('social_accounts.urls')),
+    path(URL + "auth/", include('auth_core.urls')),
+    path(URL + "oauth/" , include('oauth.urls')),
 ]
 
 if settings.DEBUG:
