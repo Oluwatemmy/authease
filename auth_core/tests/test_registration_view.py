@@ -105,7 +105,7 @@ class RegisterUserViewTests(TestCase):
         
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('email', response.data)
-        self.assertEqual(str(response.data['email'][0]), "user with this Email Address already exists.")
+        self.assertEqual(str(response.data['email'][0]), "User with this Email Address already exists.")
     
     def test_register_invalid_method(self):
         """

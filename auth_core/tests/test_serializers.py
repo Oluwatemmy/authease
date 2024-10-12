@@ -81,7 +81,7 @@ class UserSerializerTestCase(TestCase):
         self.assertIn("email", serializer.errors)
         self.assertEqual(
             serializer.errors["email"],
-            ["user with this Email Address already exists."]
+            ["User with this Email Address already exists."]
         )
 
     def test_user_registration_empty_password(self):
@@ -116,7 +116,7 @@ class LoginSerializerTestCase(TestCase):
         self.assertTrue(serializer.is_valid())
         response = serializer.validated_data
         self.assertEqual(response['email'], self.user.email)
-        self.assertEqual(response['full_name'], self.user.get_full_name)
+        self.assertEqual(response['full_name'], self.user.get_full_name())
         self.assertIn('access_token', response)
         self.assertIn('refresh_token', response)
 
