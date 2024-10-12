@@ -87,6 +87,11 @@ class PasswordResetRequestSerializer(serializers.ModelSerializer):
 
         if User.objects.filter(email=email).exists():
             user = User.objects.get(email=email)
+            
+            # Check if the user is verified
+            if not user.is_verified:
+                raise serializers.ValidationError("Email is not verified. Please verify your email before resetting the password.")
+        
             uidb64 = urlsafe_base64_encode(smart_bytes(user.id))
             token = PasswordResetTokenGenerator().make_token(user)
             request = self.context.get('request')
@@ -100,7 +105,8 @@ class PasswordResetRequestSerializer(serializers.ModelSerializer):
                 'to_email': user.email
             }
             send_normal_email(data)
-
+        else:
+            raise serializers.ValidationError("User with this email does not exist")
 
         return super().validate(attrs)
 
@@ -120,12 +126,15 @@ class SetNewPasswordSerializer(serializers.Serializer):
         ]
 
     def validate(self, attrs):
+        password = attrs.get("password")
+        confirm_password = attrs.get("confirm_password")
+
+        if password != confirm_password:
+            raise AuthenticationFailed("Password and Confirm Password doesn't match", 401)
+        
         try:
             token = attrs.get("token")
             uidb64 = attrs.get("uidb64")
-            password = attrs.get("password")
-            confirm_password = attrs.get("confirm_password")
-
             user_id = force_str(urlsafe_base64_decode(uidb64))
             user = User.objects.get(id=user_id)
             if not PasswordResetTokenGenerator().check_token(user, token):

@@ -107,14 +107,19 @@ class PasswordResetConfirm(GenericAPIView):
         try:
             user_id = smart_str(urlsafe_base64_decode(uidb64))
             user = User.objects.get(id=user_id)
+
             if not PasswordResetTokenGenerator().check_token(user, token):
                 return Response({"message": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
+            
             return Response({
                 "success": True,
                 "message": "Valid token, please reset your password",
                 'uidb64': uidb64,
                 'token': token
             }, status=status.HTTP_200_OK)
+        
+        except User.DoesNotExist:
+            return Response({"message": "Invalid user"}, status=status.HTTP_400_BAD_REQUEST)
         
         except DjangoUnicodeDecodeError:
             return Response({"message": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
@@ -138,6 +143,4 @@ class LogoutView(GenericAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(status=status.HTTP_200_OK)
-
-
 

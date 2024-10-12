@@ -200,7 +200,7 @@ class PasswordResetRequestSerializerTestCase(TestCase):
             "email": "nonexistent@example.com",
         }
         serializer = PasswordResetRequestSerializer(data=data, context={'request': None})
-        self.assertTrue(serializer.is_valid())  # Should be valid even if user is not found because we are only testing for the serializer
+        self.assertFalse(serializer.is_valid())  # Should be false because the user does not exist
         # Check if an email was sent
         self.assertEqual(len(mail.outbox), 0)  # No email should have been sent
 
