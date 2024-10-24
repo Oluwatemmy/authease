@@ -1,0 +1,24 @@
+Metadata-Version: 2.1
+Name: authease
+Version: 1.0.1
+Summary: An authentication package
+Home-page: https://github.com/Oluwatemmy/authease
+Author: Oluwaseyi Ajayi
+Author-email: oluwaseyitemitope456@gmail.com
+Project-URL: Documentation, https://github.com/Oluwatemmy/authease#readme
+Project-URL: Source, https://github.com/Oluwatemmy/authease
+Project-URL: Issues, https://github.com/Oluwatemmy/authease/issues
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Framework :: Django
+Classifier: Development Status :: 3 - Alpha
+Requires-Python: >=3.6
+License-File: LICENSE
+Requires-Dist: Django>=5.0.6
+Requires-Dist: djangorestframework>=3.15.1
+Requires-Dist: python-dotenv>=1.0.1
+Requires-Dist: django-environ>=0.11.2
+Requires-Dist: djangorestframework-simplejwt>=5.3.1
+Requires-Dist: google-api-python-client>=2.136.0
+Requires-Dist: environs>=11.0.0
+Requires-Dist: marshmallow>=3.21.3
