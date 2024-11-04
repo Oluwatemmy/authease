@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='authease',       # Package name
-    version='1.0.1',        # Version of the package
+    version='1.1.0',        # Version of the package
     description='An authentication package',
     author='Oluwaseyi Ajayi', 
     author_email='oluwaseyitemitope456@gmail.com',
@@ -21,7 +21,7 @@ setup(
         'google-api-python-client>=2.136.0',
         'environs>=11.0.0',
         'marshmallow>=3.21.3',
-    ],       # Use the requirements.txt file
+    ],
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: MIT License',
