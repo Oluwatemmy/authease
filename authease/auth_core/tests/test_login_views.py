@@ -3,7 +3,7 @@ from django.urls import reverse
 from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
-from auth_core.models import User, OneTimePassword
+from authease.auth_core.models import User, OneTimePassword
 from django.core import mail
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError, TokenBackendError

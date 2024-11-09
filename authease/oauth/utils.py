@@ -1,5 +1,5 @@
 import secrets, string
-from auth_core.models import User
+from authease.auth_core.models import User
 from django.conf import settings
 from django.contrib.auth import authenticate
 from google.auth.transport import requests

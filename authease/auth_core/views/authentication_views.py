@@ -1,10 +1,10 @@
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.generics import GenericAPIView
-from auth_core.models import OneTimePassword
-from auth_core.utils import send_code_to_user
+from authease.auth_core.models import OneTimePassword
+from authease.auth_core.utils import send_code_to_user
 from rest_framework.permissions import IsAuthenticated
-from auth_core.serializers import UserRegisterSerializer, LoginSerializer, LogoutSerializer
+from authease.auth_core.serializers import UserRegisterSerializer, LoginSerializer, LogoutSerializer
 
 class RegisterUserView(GenericAPIView):
     serializer_class = UserRegisterSerializer

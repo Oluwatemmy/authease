@@ -96,7 +96,7 @@ Replace `<your_google_client_id>`, `<your_google_client_secret>`, `<your_github_
 #### Using Login View
 You can use the built-in login view in your Django templates:
 ```python
-from auth_core.views import LoginUserView
+from authease.auth_core.views import LoginUserView
 
 urlpatterns = [
     path('login/', LoginUserView.as_view(), name='login'),

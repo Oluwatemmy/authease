@@ -1,8 +1,8 @@
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.generics import GenericAPIView
-from auth_core.models import User
-from auth_core.serializers import PasswordResetRequestSerializer, SetNewPasswordSerializer
+from authease.auth_core.models import User
+from authease.auth_core.serializers import PasswordResetRequestSerializer, SetNewPasswordSerializer
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import smart_str, DjangoUnicodeDecodeError
 from django.contrib.auth.tokens import PasswordResetTokenGenerator

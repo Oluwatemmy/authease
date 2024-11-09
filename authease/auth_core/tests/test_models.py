@@ -1,5 +1,5 @@
 from django.test import TestCase
-from auth_core.models import User, OneTimePassword
+from authease.auth_core.models import User, OneTimePassword
 
 
 class UserModelTest(TestCase):
