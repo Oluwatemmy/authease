@@ -28,15 +28,27 @@ class RegisterUserView(GenericAPIView):
 
 
 class VerifyUserEmail(GenericAPIView):
-    def post(self, request):
-        otpcode = request.data.get("otp")
+    def post(self, request, otpcode):
 
         try:
             user_code_obj = OneTimePassword.objects.get(code=otpcode)
+
+            # Check if the code is expired
+            if user_code_obj.is_expired():  # Now using 15 minutes as expiration time
+                user_code_obj.delete()  # Delete expired code
+                return Response(
+                    {"message": "This code has expired. Please request a new one."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            
             user = user_code_obj.user
             if not user.is_verified:
                 user.is_verified = True
                 user.save()
+
+                # delete the otp code after being verified
+                user_code_obj.delete()
+                
                 return Response(
                     {"message": "Account email verified successfully"},
                     status=status.HTTP_200_OK,

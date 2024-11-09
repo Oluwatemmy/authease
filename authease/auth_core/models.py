@@ -4,6 +4,7 @@ from django.contrib.auth.models import (
     PermissionsMixin,
 )
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 from .manager import UserManager
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.core.validators import RegexValidator
@@ -72,9 +73,14 @@ class User(AbstractBaseUser, PermissionsMixin):
 class OneTimePassword(models.Model):
     code_validator = RegexValidator(regex=r'^\d{6}$', message="Code must be 6 digits.")
 
-
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     code = models.CharField(max_length=6, unique=True, validators=[code_validator])
+    created_at = models.DateTimeField(auto_now_add=True)  # Automatically set timestamp when created
+
+    def is_expired(self, expiration_minutes=15):
+        """Check if the code has expired based on a 15-minute expiration time."""
+        expiration_time = self.created_at + timezone.timedelta(minutes=expiration_minutes)
+        return timezone.now() > expiration_time
 
     def __str__(self):
         return f"{self.user.first_name} passcode"
