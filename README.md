@@ -44,7 +44,7 @@ Note: All necessary dependencies will be installed automatically if not already 
 
 ## Installation
 
-To install Authease, use pip:
+To install Authease, use the following command:
 
 ```bash
 pip install authease
@@ -58,18 +58,38 @@ Add **Authease** to your `INSTALLED_APPS` list in your Django `settings.py` file
 ```python
 INSTALLED_APPS = [
     # Other Django apps
-    'authease',
+    'rest_framework',  # For Django REST Framework
+    'authease.authcore',
+    'authease.oauth'
 ]
 ```
-### 2.Migrate Database
+### 2. Update the `AUTH_USER_MODEL` Setting
+Authease provides a custom user model that must be set in your Django project. In your `settings.py`, add the following line:
+```python
+AUTH_USER_MODEL = 'auth_core.User'
+```
+This step is essential for Authease's authentication functionalities to work properly. Ensure this is configured before running migrations or creating any user-related data in the database.
+
+### 3. Migrate Database
 
 Run the migrations to set up the necessary database tables for **Authease**:
 ```python
 python manage.py migrate
 ```
-### 3. Configure Environment Variables
+### 4. Configure Environment Variables
 **Authease** requires several environment variables for configuration. Add the following variables to your `settings.py` or `.env` file:
 ```python
+# Email Settings
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' # Test locally on console
+EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend' # For production stage
+
+EMAIL_HOST=<your_email_host>
+EMAIL_PORT=<your_email_port>
+EMAIL_USE_TLS=True  # Or False depending on your email provider's requirements
+EMAIL_HOST_USER=<your_email_host_user>
+EMAIL_HOST_PASSWORD=<your_email_host_password>
+DEFAULT_FROM_EMAIL=<your_default_from_email>
+
 # For Google OAuth
 GOOGLE_CLIENT_ID=<your_google_client_id>
 GOOGLE_CLIENT_SECRET=<your_google_client_secret>
@@ -83,6 +103,8 @@ SECRET_KEY=<your_secret_key>
 ```
 Replace `<your_google_client_id>`, `<your_google_client_secret>`, `<your_github_client_id>`, `<your_github_client_secret>`, and `<your_secret_key>` with the actual credentials.
 
+Ensure these values are correctly set to allow account verification and OAuth functionalities in Authease.
+
 ## Usage
 #### Authease provides built-in views for user authentication, including:
 
@@ -93,40 +115,43 @@ Replace `<your_google_client_id>`, `<your_google_client_secret>`, `<your_github_
 - GitHub OAuth
 
 ### Example Setup:
-#### Using Login View
-You can use the built-in login view in your Django templates:
+### 1. Include the Auth Routes
+Add the following URL patterns to your main `urls.py` to enable Authease’s authentication routes in your project:
 ```python
-from authease.auth_core.views import LoginUserView
+from django.urls import path, include
 
 urlpatterns = [
-    path('login/', LoginUserView.as_view(), name='login'),
+    # Other URL patterns for your project
+    path('auth/', include('auth_core.urls')),  # Authease authentication routes
+    path('oauth/', include('oauth.urls')),  # Authease o-auth routes
 ]
 ```
-#### OAuth Integration Example
-To enable Google and GitHub OAuth in your application, include their respective views:
-```python
-from authease.oauth.views import GoogleSignInView, GithubSignInView
+### 2. Using Individual Views
+If you want to set up specific routes individually, you can include each view as needed:
+- **Register View Example**
 
-urlpatterns = [
-    path('auth/google/', GoogleSignInView.as_view(), name='google_auth'),
-    path('auth/github/', GithubSignInView.as_view(), name='github_auth'),
-]
-```
+  Use Authease's built-in `RegisterUserView` for user login:
+  ```python
+  from authease.auth_core.views import RegisterUserView
+
+  urlpatterns = [
+      path('register/', RegisterUserView.as_view(), name='register'),  # Register a user
+  ]
+  ```
+
+
+- #### OAuth Integration Example
+  To enable Google and GitHub OAuth in your application, include their respective views:
+  ```python
+  from authease.oauth.views import GoogleSignInView, GithubSignInView
+  
+  urlpatterns = [
+      path('auth/google/', GoogleSignInView.as_view(), name='google_auth'),
+      path('auth/github/', GithubSignInView.as_view(), name='github_auth'),
+  ]
+  ```
 
 ## Advanced Configuration
-**Authease** supports the following settings in your `settings.py`:
-
-- `AUTHENTICATION_BACKENDS`: Add custom authentication backends if needed.
-- `LOGIN_REDIRECT_URL`: Specify the URL where users are redirected after successful login.
-- `LOGOUT_REDIRECT_URL`: Specify the URL where users are redirected after logout.
-
-Example:
-```bash
-LOGIN_REDIRECT_URL = '/dashboard/'
-LOGOUT_REDIRECT_URL = '/login/'
-```
-Replace `/dashboard/` and `/login/` with the actual url name
-
 Also, To enable JWT token-based authentication, configure djangorestframework-simplejwt in your `settings.py`:
 ```python
 from datetime import timedelta
