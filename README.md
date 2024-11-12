@@ -122,8 +122,8 @@ from django.urls import path, include
 
 urlpatterns = [
     # Other URL patterns for your project
-    path('auth/', include('auth_core.urls')),  # Authease authentication routes
-    path('oauth/', include('oauth.urls')),  # Authease o-auth routes
+    path('auth/', include('authease.auth_core.urls')),  # Authease authentication routes
+    path('oauth/', include('authease.oauth.urls')),  # Authease o-auth routes
 ]
 ```
 ### 2. Using Individual Views
