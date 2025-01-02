@@ -1,13 +1,10 @@
 from django.db import models
-from django.contrib.auth.models import (
-    AbstractBaseUser,
-    PermissionsMixin,
-)
-from django.utils.translation import gettext_lazy as _
-from django.utils import timezone
 from .manager import UserManager
-from rest_framework_simplejwt.tokens import RefreshToken
+from django.utils import timezone
 from django.core.validators import RegexValidator
+from django.utils.translation import gettext_lazy as _
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 
 # Create your models here.
 
@@ -84,3 +81,12 @@ class OneTimePassword(models.Model):
 
     def __str__(self):
         return f"{self.user.first_name} passcode"
+
+
+class PasswordResetToken(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="password_reset_token")
+    token = models.CharField(max_length=100, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.first_name} password reset token"

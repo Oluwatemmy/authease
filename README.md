@@ -20,11 +20,11 @@ Authease is a lightweight, flexible authentication package for Django applicatio
 
 ## Features
 
-- User registration and login
-- Password management (reset, change, and confirmation)
-- JWT-based authentication for secure token management
-- Easy configuration and integration with Django settings
-- Built-in views and serializers to get started immediately
+- **Password-Based Authentication**: Authease offers secure user registration, login, and password reset functionality.
+- **OAuth Integration**: Support for Google and GitHub OAuth for social login.
+- **Customizable Security**: Works with Django's authentication backend and supports JWT for session and token-based authentication.
+- **Dynamic Password Generation**: Automatically generates secure passwords for social login users.
+- **Easy Setup & Integration**: Minimal setup with high customizability to suit various Django project needs.
 
 ## Requirements
 
@@ -59,7 +59,7 @@ Add **Authease** to your `INSTALLED_APPS` list in your Django `settings.py` file
 INSTALLED_APPS = [
     # Other Django apps
     'rest_framework',  # For Django REST Framework
-    'authease.authcore',
+    'authease.auth_core',
     'authease.oauth'
 ]
 ```
@@ -70,15 +70,12 @@ AUTH_USER_MODEL = 'auth_core.User'
 ```
 This step is essential for Authease's authentication functionalities to work properly. Ensure this is configured before running migrations or creating any user-related data in the database.
 
-### 3. Migrate Database
-
-Run the migrations to set up the necessary database tables for **Authease**:
-```python
-python manage.py migrate
-```
-### 4. Configure Environment Variables
+### 3. Configure Environment Variables
 **Authease** requires several environment variables for configuration. Add the following variables to your `settings.py` or `.env` file:
 ```python
+# Django Secret Key
+SECRET_KEY=<your_secret_key>
+
 # Email Settings
 # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' # Test locally on console
 EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend' # For production stage
@@ -98,12 +95,33 @@ GOOGLE_CLIENT_SECRET=<your_google_client_secret>
 GITHUB_CLIENT_ID=<your_github_client_id>
 GITHUB_CLIENT_SECRET=<your_github_client_secret>
 
-# Django Secret Key
-SECRET_KEY=<your_secret_key>
 ```
 Replace `<your_google_client_id>`, `<your_google_client_secret>`, `<your_github_client_id>`, `<your_github_client_secret>`, and `<your_secret_key>` with the actual credentials.
 
 Ensure these values are correctly set to allow account verification and OAuth functionalities in Authease.
+
+### 4. Specify Password Reset Timeout
+Add the following setting to your settings.py file to specify the timeout duration for password reset links:
+```python
+PASSWORD_RESET_TIMEOUT = 1800  # Set timeout to 30 minutes (1800 seconds)
+```
+This setting is crucial for ensuring that password reset links remain valid for a reasonable amount of time.
+### 5. Site-specific configurations
+Configure the following settings in your `settings.py` file:
+```python
+# Site-specific configurations
+SITE_NAME = "Your Site Name"
+SITE_URL = "https://www.yoursite.com"
+```
+- `SITE_NAME`: This should be the name of your site or application. It will be used in email templates and other communications.
+- `SITE_URL`: This should be the base URL of your site (e.g., "https://www.example.com"). It will be used to generate links in emails. If you don’t have a URL yet, you can use "#" as a placeholder.
+
+### 6. Migrate Database
+
+Run the migrations to set up the necessary database tables for **Authease**:
+```python
+python manage.py migrate
+```
 
 ## Usage
 #### Authease provides built-in views for user authentication, including:
@@ -157,10 +175,35 @@ Also, To enable JWT token-based authentication, configure djangorestframework-si
 from datetime import timedelta
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True,
+    # Token Lifetimes
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=12),   # Customize as per your use case
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+
+    # Token Header Configuration
+    "AUTH_HEADER_TYPES": ("Bearer",),               # Default is "Bearer"
+    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",       # Ensures proper header lookup
+
+    # Rotation and Blacklisting
+    "ROTATE_REFRESH_TOKENS": True,                  # Issue a new refresh token on each refresh
+    "BLACKLIST_AFTER_ROTATION": True,               # Blacklist the old refresh token after rotation
+
+    # Custom Claims and Validation
+    "ALGORITHM": "HS256",                           # Ensure you're using a secure algorithm
+    "SIGNING_KEY": SECRET_KEY,                      # Use Django's SECRET_KEY or a separate secure key
+    "VERIFYING_KEY": None,                          # Public key for asymmetric algorithms like RS256
+    "AUDIENCE": None,                               # Add audience claim if needed
+    "ISSUER": None,                                 # Add issuer claim if needed
+
+    # Sliding Tokens (Optional)
+    "SLIDING_TOKEN_LIFETIME": timedelta(hours=12),  # For sliding sessions (if used), Customize as per your use case
+    "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
+
+    # Miscellaneous
+    "USER_ID_FIELD": "id",                          # Primary key field for user
+    "USER_ID_CLAIM": "user_id",                     # Claim in the token for user ID
+    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
+    "TOKEN_TYPE_CLAIM": "token_type",               # Claim for identifying token type
+    "JTI_CLAIM": "jti",                             # JWT ID claim for unique identification
 }
 ```
 

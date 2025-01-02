@@ -1,4 +1,3 @@
-import os
 from setuptools import setup, find_packages
 
 with open('README.md', 'r') as f:
@@ -6,7 +5,7 @@ with open('README.md', 'r') as f:
 
 setup(
     name='authease',       # Package name
-    version='1.2.0',        # Version of the package
+    version='2.0.0',        # Version of the package
     description='Authease is a lightweight and flexible authentication package for Django, offering essential tools for secure user authentication, including JWT support, with minimal setup required.',
     author='Oluwaseyi Ajayi', 
     author_email='oluwaseyitemitope456@gmail.com',

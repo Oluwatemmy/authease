@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Email Verification - Auth Ease</title>
+    <title>Email Verification</title>
     <style>
         /* Global styles */
         body {
@@ -102,7 +102,7 @@
 <body>
     <div class="email-container">
         <div class="email-header">
-            <h1>Welcome to Auth Ease, {{ user_name }}!</h1>
+            <h1>Welcome to {{ site_name }}, {{ user_name }}!</h1>
         </div>
         <div class="content">
             <p>Thank you for signing up on <a href="{{ site_url }}" style="color: #4CAF50; text-decoration: none;">{{ site_name }}</a>.</p>
@@ -112,7 +112,7 @@
         </div>
         <div class="footer">
             <p>If you did not sign up for this account, please ignore this email.</p>
-            <p>&copy; {{ current_year }} Auth Ease. All rights reserved.</p>
+            <p>&copy; {{ current_year }} {{ site_name }}. All rights reserved.</p>
         </div>
     </div>
 </body>
