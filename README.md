@@ -1,6 +1,6 @@
 # Authease
 
-Authease is a lightweight, flexible authentication package for Django applications. It provides essential tools for handling user authentication, including JWT-based authentication, making it easy for developers to integrate into their Django projects without building an authentication system from scratch.
+Authease is a lightweight, flexible authentication package for Django applications. It provides essential tools for handling user authentication, including JWT-based authentication, email verification via OTP, password reset, password change, and OAuth support — making it easy for developers to integrate into their Django projects without building an authentication system from scratch.
 
 ## Table of Contents
 - [Features](#features)
@@ -9,6 +9,7 @@ Authease is a lightweight, flexible authentication package for Django applicatio
 - [Configuration](#configuration)
 - [Usage](#usage)
   - [Example Setup](#example-setup)
+- [API Endpoints](#api-endpoints)
 - [Advanced Configuration](#advanced-configuration)
 - [Documentation](#documentation)
 - [Issues](#issues)
@@ -20,7 +21,10 @@ Authease is a lightweight, flexible authentication package for Django applicatio
 
 ## Features
 
-- **Password-Based Authentication**: Authease offers secure user registration, login, and password reset functionality.
+- **Password-Based Authentication**: Secure user registration, login, and password reset functionality.
+- **Email Verification (OTP)**: Configurable one-time password verification with adjustable code length and expiry time.
+- **Password Change**: Authenticated users can change their password securely.
+- **Rate Limiting / Throttling**: Built-in throttle classes for login, password reset, and OTP verification to prevent abuse.
 - **OAuth Integration**: Support for Google and GitHub OAuth for social login.
 - **Customizable Security**: Works with Django's authentication backend and supports JWT for session and token-based authentication.
 - **Dynamic Password Generation**: Automatically generates secure passwords for social login users.
@@ -30,15 +34,10 @@ Authease is a lightweight, flexible authentication package for Django applicatio
 
 To use Authease, the following packages will be installed in your Django environment:
 
-- Django
-- djangorestframework
-- python-dotenv
-- django-environ
-- djangorestframework-simplejwt
-- google-api-python-client
-- coreapi
-- environs
-- marshmallow
+- Django >= 5.0.6
+- djangorestframework >= 3.15.1
+- djangorestframework-simplejwt >= 5.3.1
+- google-api-python-client >= 2.136.0
 
 Note: All necessary dependencies will be installed automatically if not already present.
 
@@ -59,8 +58,9 @@ Add **Authease** to your `INSTALLED_APPS` list in your Django `settings.py` file
 INSTALLED_APPS = [
     # Other Django apps
     'rest_framework',  # For Django REST Framework
+    'rest_framework_simplejwt.token_blacklist',  # Required for logout/token blacklisting
     'authease.auth_core',
-    'authease.oauth'
+    'authease.oauth',
 ]
 ```
 ### 2. Update the `AUTH_USER_MODEL` Setting
@@ -71,55 +71,76 @@ AUTH_USER_MODEL = 'auth_core.User'
 This step is essential for Authease's authentication functionalities to work properly. Ensure this is configured before running migrations or creating any user-related data in the database.
 
 ### 3. Configure Environment Variables
-**Authease** requires several environment variables for configuration. Add the following variables to your `settings.py` or `.env` file:
+**Authease** requires several environment variables for configuration. Add the following to your `settings.py` or `.env` file:
 ```python
 # Django Secret Key
-SECRET_KEY=<your_secret_key>
+SECRET_KEY = '<your_secret_key>'
 
 # Email Settings
-# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' # Test locally on console
-EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend' # For production stage
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Test locally on console
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # For production
 
-EMAIL_HOST=<your_email_host>
-EMAIL_PORT=<your_email_port>
-EMAIL_USE_TLS=True  # Or False depending on your email provider's requirements
-EMAIL_HOST_USER=<your_email_host_user>
-EMAIL_HOST_PASSWORD=<your_email_host_password>
-DEFAULT_FROM_EMAIL=<your_default_from_email>
+EMAIL_HOST = '<your_email_host>'
+EMAIL_PORT = '<your_email_port>'
+EMAIL_USE_TLS = True  # Or False depending on your email provider's requirements
+EMAIL_HOST_USER = '<your_email_host_user>'
+EMAIL_HOST_PASSWORD = '<your_email_host_password>'
+DEFAULT_FROM_EMAIL = '<your_default_from_email>'
 
 # For Google OAuth
-GOOGLE_CLIENT_ID=<your_google_client_id>
-GOOGLE_CLIENT_SECRET=<your_google_client_secret>
+GOOGLE_CLIENT_ID = '<your_google_client_id>'
+GOOGLE_CLIENT_SECRET = '<your_google_client_secret>'
 
 # For GitHub OAuth
-GITHUB_CLIENT_ID=<your_github_client_id>
-GITHUB_CLIENT_SECRET=<your_github_client_secret>
-
+GITHUB_CLIENT_ID = '<your_github_client_id>'
+GITHUB_CLIENT_SECRET = '<your_github_client_secret>'
 ```
-Replace `<your_google_client_id>`, `<your_google_client_secret>`, `<your_github_client_id>`, `<your_github_client_secret>`, and `<your_secret_key>` with the actual credentials.
-
-Ensure these values are correctly set to allow account verification and OAuth functionalities in Authease.
+Replace the placeholder values with your actual credentials. Ensure these values are correctly set to allow account verification and OAuth functionalities.
 
 ### 4. Specify Password Reset Timeout
-Add the following setting to your settings.py file to specify the timeout duration for password reset links:
+Add the following setting to your `settings.py` to specify the timeout duration for password reset links:
 ```python
 PASSWORD_RESET_TIMEOUT = 1800  # Set timeout to 30 minutes (1800 seconds)
 ```
-This setting is crucial for ensuring that password reset links remain valid for a reasonable amount of time.
-### 5. Site-specific configurations
+
+### 5. Site-specific Configurations
 Configure the following settings in your `settings.py` file:
 ```python
-# Site-specific configurations
 SITE_NAME = "Your Site Name"
 SITE_URL = "https://www.yoursite.com"
 ```
-- `SITE_NAME`: This should be the name of your site or application. It will be used in email templates and other communications.
-- `SITE_URL`: This should be the base URL of your site (e.g., "https://www.example.com"). It will be used to generate links in emails. If you don’t have a URL yet, you can use "#" as a placeholder.
+- `SITE_NAME`: The name of your site or application, used in email templates and other communications.
+- `SITE_URL`: The base URL of your site (e.g., `https://www.example.com`), used to generate links in emails. Use `"#"` as a placeholder if you don't have a URL yet.
 
-### 6. Migrate Database
+### 6. Authease Settings (Optional)
+Configure optional Authease-specific settings in your `settings.py`:
+```python
+# OTP Configuration
+AUTHEASE_OTP_LENGTH = 6          # Length of the OTP code (default: 6)
+AUTHEASE_OTP_EXPIRY_MINUTES = 15 # OTP expiry time in minutes (default: 15)
+OTP_RESEND_COOLDOWN = 60         # Cooldown in seconds between OTP resend requests (default: 60)
+```
+
+### 7. Throttle Configuration
+Authease uses throttle classes to rate-limit sensitive endpoints. Add the following to your `REST_FRAMEWORK` settings:
+```python
+REST_FRAMEWORK = {
+    'DEFAULT_THROTTLE_RATES': {
+        'login': '5/min',
+        'password_reset': '3/min',
+        'otp_verify': '5/min',
+    }
+}
+```
+These rates are customizable. The throttles are applied to:
+- `login` — Login endpoint
+- `password_reset` — Password reset request endpoint
+- `otp_verify` — Email verification (OTP) endpoint
+
+### 8. Migrate Database
 
 Run the migrations to set up the necessary database tables for **Authease**:
-```python
+```bash
 python manage.py migrate
 ```
 
@@ -128,32 +149,59 @@ python manage.py migrate
 
 - Registration
 - Login
-- Password Reset
+- Email Verification (OTP)
+- Resend OTP
+- Password Reset (request, confirm, set new password)
+- Password Change (authenticated)
+- Logout
+- Token Refresh
 - Google OAuth
 - GitHub OAuth
 
 ### Example Setup:
 ### 1. Include the Auth Routes
-Add the following URL patterns to your main `urls.py` to enable Authease’s authentication routes in your project:
+Add the following URL patterns to your main `urls.py` to enable Authease's authentication routes in your project:
 ```python
 from django.urls import path, include
 
 urlpatterns = [
     # Other URL patterns for your project
     path('auth/', include('authease.auth_core.urls')),  # Authease authentication routes
-    path('oauth/', include('authease.oauth.urls')),  # Authease o-auth routes
+    path('oauth/', include('authease.oauth.urls')),  # Authease OAuth routes
 ]
 ```
+
+### Available Endpoints
+
+When mounted at `auth/` and `oauth/`, the following endpoints are available:
+
+**Auth Core:**
+- `auth/register/`
+- `auth/verify_email/`
+- `auth/resend_otp/`
+- `auth/login/`
+- `auth/test_auth/`
+- `auth/password_reset/`
+- `auth/password_reset_confirm/<uidb64>/<token>/`
+- `auth/set_new_password/`
+- `auth/change_password/`
+- `auth/logout/`
+- `auth/token/refresh/`
+
+**OAuth:**
+- `oauth/google/`
+- `oauth/github/`
+
 ### 2. Using Individual Views
 If you want to set up specific routes individually, you can include each view as needed:
 - **Register View Example**
 
-  Use Authease's built-in `RegisterUserView` for user login:
+  Use Authease's built-in `RegisterUserView` for user registration:
   ```python
   from authease.auth_core.views import RegisterUserView
 
   urlpatterns = [
-      path('register/', RegisterUserView.as_view(), name='register'),  # Register a user
+      path('register/', RegisterUserView.as_view(), name='register'),
   ]
   ```
 
@@ -162,15 +210,33 @@ If you want to set up specific routes individually, you can include each view as
   To enable Google and GitHub OAuth in your application, include their respective views:
   ```python
   from authease.oauth.views import GoogleSignInView, GithubSignInView
-  
+
   urlpatterns = [
       path('auth/google/', GoogleSignInView.as_view(), name='google_auth'),
       path('auth/github/', GithubSignInView.as_view(), name='github_auth'),
   ]
   ```
 
+## API Endpoints
+
+| Method | Endpoint | Auth Required | Description |
+|--------|----------|:---:|-------------|
+| POST | `register/` | No | Register a new user |
+| POST | `verify_email/` | No | Verify email with OTP code |
+| POST | `resend_otp/` | No | Resend OTP verification code |
+| POST | `login/` | No | Login and receive JWT tokens |
+| GET | `test_auth/` | Yes | Test that authentication is working |
+| POST | `password_reset/` | No | Request a password reset email |
+| GET | `password_reset_confirm/<uidb64>/<token>/` | No | Confirm password reset token validity |
+| PATCH | `set_new_password/` | No | Set a new password after reset |
+| POST | `change_password/` | Yes | Change password (authenticated users) |
+| POST | `logout/` | Yes | Logout and blacklist refresh token |
+| POST | `token/refresh/` | No | Refresh JWT access token |
+| POST | `google/` | No | Sign in with Google OAuth |
+| POST | `github/` | No | Sign in with GitHub OAuth |
+
 ## Advanced Configuration
-Also, To enable JWT token-based authentication, configure djangorestframework-simplejwt in your `settings.py`:
+To enable JWT token-based authentication, configure djangorestframework-simplejwt in your `settings.py`:
 ```python
 from datetime import timedelta
 
