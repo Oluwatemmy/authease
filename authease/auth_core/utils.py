@@ -1,19 +1,23 @@
 import random
+import logging
 from django.conf import settings
-from  django.utils import timezone
+from django.utils import timezone
+
+logger = logging.getLogger(__name__)
+from rest_framework import serializers
 from django.core.mail import EmailMessage
 from .models import User, OneTimePassword
 from django.template.loader import render_to_string
 
 
 def generateotp():
-    return ''.join([str(random.randint(0, 9)) for _ in range(6)])
+    length = getattr(settings, 'AUTHEASE_OTP_LENGTH', 6)
+    return ''.join([str(random.randint(0, 9)) for _ in range(length)])
 
 
 def send_code_to_user(email):
     Subject = "One time passcode for Email verification"
     otp_code = generateotp()
-    print(otp_code)
     try:
         user = User.objects.get(email=email)
         site_url = settings.SITE_URL
@@ -41,34 +45,36 @@ def send_code_to_user(email):
         send_email.send(fail_silently=False)
 
         # Save OTP to the database only if the email is sent successfully
-        OneTimePassword.objects.create(user=user, code=otp_code)
+        OneTimePassword.objects.update_or_create(user=user, defaults={'code': otp_code})
     except Exception as e:
-        print(f"Error sending email to {email}: {e}")
+        raise serializers.ValidationError(f"Error sending email to {email}: {e}")
 
-def send_normal_email(data):
+def send_password_reset_email(data):
+    try:
+        site_name = settings.SITE_NAME
+        context = {
+            'site_name': site_name,
+            'user_name': data.get('user_name', 'User'),
+            'reset_link': data['reset_link'],
+            'current_year': timezone.now().year,
+        }
 
-    site_name = settings.SITE_NAME
-    context = {
-        'site_name': site_name,
-        'user_name': data.get('user_name', 'User'),
-        'reset_link': data['reset_link'],
-        'current_year': timezone.now().year,
-    }
+        email_body = render_to_string('email/password_reset_email.html', context)
 
-    email_body = render_to_string('email/password_reset_email.html', context)
+        from_name = site_name
+        from_email = settings.DEFAULT_FROM_EMAIL
 
-    from_name = site_name
-    from_email = settings.DEFAULT_FROM_EMAIL
+        # Set the "From" header with the desired name and email
+        from_address = f"{from_name} <{from_email}>"
 
-    # Set the "From" header with the desired name and email
-    from_address = f"{from_name} <{from_email}>"
-    
-    email = EmailMessage(
-        subject=data['email_subject'],
-        body=email_body,
-        from_email=from_address,
-        to=[data['to_email']]
-    )
+        email = EmailMessage(
+            subject=data['email_subject'],
+            body=email_body,
+            from_email=from_address,
+            to=[data['to_email']]
+        )
 
-    email.content_subtype = 'html'  # Ensure the email is sent as HTML
-    email.send()
+        email.content_subtype = 'html'  # Ensure the email is sent as HTML
+        email.send(fail_silently=False)
+    except Exception as e:
+        logger.error(f"Failed to send password reset email to {data.get('to_email')}: {e}")

@@ -1,7 +1,6 @@
 from django.db import models
 from .manager import UserManager
 from django.utils import timezone
-from django.core.validators import RegexValidator
 from django.utils.translation import gettext_lazy as _
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
@@ -18,7 +17,7 @@ AUTH_PROVIDERS = {
 class User(AbstractBaseUser, PermissionsMixin):
     # Abstractbaseuser has password, last_login, is_active by default
 
-    email = models.EmailField(unique=True, max_length=255, verbose_name= _("Email Address"), help_text=_("Required. Enter a valid email address."))
+    email = models.EmailField(unique=True, max_length=255, verbose_name= _("Email Address"))
     first_name = models.CharField(max_length=150, verbose_name=_("First name"))
     last_name = models.CharField(max_length=150, verbose_name=_("Last name"))
 
@@ -37,9 +36,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     date_joined = models.DateTimeField(
         auto_now_add=True
     )
-    last_login = models.DateTimeField(
-        auto_now=True
-    )
     auth_provider = models.CharField(max_length=50, default=AUTH_PROVIDERS.get("email"))
 
     USERNAME_FIELD = "email"
@@ -51,6 +47,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
     
+    @property
     def get_full_name(self):
         return f"{self.first_name} {self.last_name}"
     
@@ -68,14 +65,14 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 class OneTimePassword(models.Model):
-    code_validator = RegexValidator(regex=r'^\d{6}$', message="Code must be 6 digits.")
-
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    code = models.CharField(max_length=6, unique=True, validators=[code_validator])
+    code = models.CharField(max_length=10, unique=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)  # Automatically set timestamp when created
 
-    def is_expired(self, expiration_minutes=15):
-        """Check if the code has expired based on a 15-minute expiration time."""
+    def is_expired(self):
+        """Check if the code has expired based on configurable expiration time."""
+        from django.conf import settings
+        expiration_minutes = getattr(settings, 'AUTHEASE_OTP_EXPIRY_MINUTES', 15)
         expiration_time = self.created_at + timezone.timedelta(minutes=expiration_minutes)
         return timezone.now() > expiration_time
 
@@ -85,7 +82,7 @@ class OneTimePassword(models.Model):
 
 class PasswordResetToken(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="password_reset_token")
-    token = models.CharField(max_length=100, unique=True)
+    token = models.CharField(max_length=100, unique=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

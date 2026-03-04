@@ -5,22 +5,18 @@ with open('README.md', 'r') as f:
 
 setup(
     name='authease',       # Package name
-    version='2.0.0',        # Version of the package
+    version='3.0.0',        # Version of the package
     description='Authease is a lightweight and flexible authentication package for Django, offering essential tools for secure user authentication, including JWT support, with minimal setup required.',
     author='Oluwaseyi Ajayi', 
     author_email='oluwaseyitemitope456@gmail.com',
     url='https://github.com/Oluwatemmy/authease',  # URL to the GitHub repo
-    packages=find_packages(),           # Automatically find all packages in the project
+    packages=find_packages(exclude=['*.tests', '*.tests.*']),
     include_package_data=True,          # Include other files like migrations
     install_requires=[
         'Django>=5.0.6',
         'djangorestframework>=3.15.1',
-        'python-dotenv>=1.0.1',
-        'django-environ>=0.11.2',
         'djangorestframework-simplejwt>=5.3.1',
         'google-api-python-client>=2.136.0',
-        'environs>=11.0.0',
-        'marshmallow>=3.21.3',
     ],
     classifiers=[
         'Programming Language :: Python :: 3',

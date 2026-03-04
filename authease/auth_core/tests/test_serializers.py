@@ -1,3 +1,4 @@
+import hashlib
 from django.core import mail
 from django.test import TestCase
 from django.utils.http import urlsafe_base64_encode
@@ -5,6 +6,7 @@ from django.utils.encoding import smart_bytes
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.exceptions import ValidationError, AuthenticationFailed
+from authease.auth_core.models import PasswordResetToken
 from authease.auth_core.serializers import *
 
 
@@ -12,8 +14,8 @@ class UserSerializerTestCase(TestCase):
     def test_user_serializer(self):
         user_data = {
             "email": "test@example.com",
-            "password": "password123",
-            "confirm_password": "password123",
+            "password": "SecureT3st!ng",
+            "confirm_password": "SecureT3st!ng",
             "first_name": "John",
             "last_name": "Doe",
         }
@@ -23,17 +25,17 @@ class UserSerializerTestCase(TestCase):
 
         self.assertEqual(user.email, user_data["email"])
         self.assertEqual(user.first_name, user_data["first_name"])
-        
+
     def test_user_serializer_with_invalid_data(self):
         # Test serializer with missing required fields
         invalid_user_data = {"email": "test@example.com"}
         serializer = UserRegisterSerializer(data=invalid_user_data)
-        
+
         self.assertFalse(serializer.is_valid())
-        
+
         with self.assertRaises(ValidationError):
             serializer.is_valid(raise_exception=True)
-        
+
     def test_user_registration_password_mismatch(self):
         invalid_user_data = {
             "email": "test@example.com",
@@ -116,7 +118,7 @@ class LoginSerializerTestCase(TestCase):
         self.assertTrue(serializer.is_valid())
         response = serializer.validated_data
         self.assertEqual(response['email'], self.user.email)
-        self.assertEqual(response['full_name'], self.user.get_full_name())
+        self.assertEqual(response['full_name'], self.user.get_full_name)
         self.assertIn('access_token', response)
         self.assertIn('refresh_token', response)
 
@@ -192,16 +194,18 @@ class PasswordResetRequestSerializerTestCase(TestCase):
         self.assertEqual(len(mail.outbox), 1)  # One email should have been sent
         email = mail.outbox[0]
         self.assertIn("Reset your Password", email.subject)
-        self.assertIn("Hi,", email.body)
-        self.assertIn("http://localhost:8000/api/v1/auth/password_reset_confirm/", email.body)  # Replace with the actual URL pattern
+        # Email body is now HTML rendered from template
+        self.assertIn("Hi John,", email.body)
+        self.assertIn("password_reset_confirm/", email.body)
 
     def test_password_reset_request_user_not_found(self):
         data = {
             "email": "nonexistent@example.com",
         }
         serializer = PasswordResetRequestSerializer(data=data, context={'request': None})
-        self.assertFalse(serializer.is_valid())  # Should be false because the user does not exist
-        # Check if an email was sent
+        # Serializer validates successfully for non-existent emails (security: don't reveal if email exists)
+        self.assertTrue(serializer.is_valid())
+        # Check that no email was sent
         self.assertEqual(len(mail.outbox), 0)  # No email should have been sent
 
     def test_password_reset_request_invalid_email(self):
@@ -235,20 +239,24 @@ class SetNewPasswordSerializerTestCase(TestCase):
         # Generate a valid token
         uidb64 = urlsafe_base64_encode(smart_bytes(self.user.id))
         token = PasswordResetTokenGenerator().make_token(self.user)
+
+        # Create the PasswordResetToken record (as the view would)
+        hashed_token = hashlib.sha256(token.encode()).hexdigest()
+        PasswordResetToken.objects.update_or_create(user=self.user, defaults={'token': hashed_token})
+
         data = {
-            'password': 'newpassword123',
-            'confirm_password': 'newpassword123',
+            'password': 'NewSecur3P@ss',
+            'confirm_password': 'NewSecur3P@ss',
             'token': token,
             'uidb64': uidb64
         }
         serializer = SetNewPasswordSerializer(data=data)
         self.assertTrue(serializer.is_valid())
-        # Password reset happens during validation
-        serializer.validated_data  # This triggers validation and saving of the new password
-        
+        serializer.save()
+
         # Verify the user's password is updated
         self.user.refresh_from_db()
-        self.assertTrue(self.user.check_password('newpassword123')) # check for the new password has been updated
+        self.assertTrue(self.user.check_password('NewSecur3P@ss')) # check for the new password has been updated
         self.assertFalse(self.user.check_password('oldpassword123')) # check for the old password is not still saved
 
     def test_invalid_token(self):
@@ -263,13 +271,6 @@ class SetNewPasswordSerializerTestCase(TestCase):
         serializer = SetNewPasswordSerializer(data=data)
         with self.assertRaises(AuthenticationFailed):
             serializer.is_valid(raise_exception=True)
-            # Password reset happens during validation
-            serializer.validated_data  # This triggers validation and saving of the new password
-            
-            # Verify the user's password is updated
-            self.user.refresh_from_db()
-            self.assertFalse(self.user.check_password('newpassword123')) # check for the new password has been updated
-            self.assertTrue(self.user.check_password('oldpassword123')) # check for the old password is not still saved
 
     def test_invalid_uid(self):
         invalid_uidb64 = 'invaliduid'
@@ -283,13 +284,6 @@ class SetNewPasswordSerializerTestCase(TestCase):
         serializer = SetNewPasswordSerializer(data=data)
         with self.assertRaises(AuthenticationFailed):
             serializer.is_valid(raise_exception=True)
-            # Password reset happens during validation
-            serializer.validated_data  # This triggers validation and saving of the new password
-            
-            # Verify the user's password is updated
-            self.user.refresh_from_db()
-            self.assertFalse(self.user.check_password('newpassword123')) # check for the new password has been updated
-            self.assertTrue(self.user.check_password('oldpassword123')) # check for the old password is not still saved
 
     def test_password_mismatch(self):
         uidb64 = urlsafe_base64_encode(smart_bytes(self.user.id))
@@ -303,13 +297,6 @@ class SetNewPasswordSerializerTestCase(TestCase):
         serializer = SetNewPasswordSerializer(data=data)
         with self.assertRaises(AuthenticationFailed):
             serializer.is_valid(raise_exception=True)
-            # Password reset happens during validation
-            serializer.validated_data  # This triggers validation and saving of the new password
-            
-            # Verify the user's password is updated
-            self.user.refresh_from_db()
-            self.assertFalse(self.user.check_password('newpassword123')) # check for the new password has been updated
-            self.assertTrue(self.user.check_password('oldpassword123')) # check for the old password is not still saved
 
     def test_missing_token_or_uid(self):
         data = {
@@ -349,7 +336,7 @@ class LogoutSerializerTestCase(TestCase):
     def test_logout_success(self):
         data = {'refresh_token': str(self.valid_refresh_token)}
         serializer = LogoutSerializer(data=data)
-        
+
         self.assertTrue(serializer.is_valid())
         serializer.save()  # This should blacklist the token
 
@@ -359,16 +346,15 @@ class LogoutSerializerTestCase(TestCase):
 
         # Check the error message
         self.assertEqual(str(context.exception), "Token is blacklisted")
-        
+
     def test_logout_invalid_token(self):
         data = {'refresh_token': self.invalid_refresh_token}
-        serializer = LogoutSerializer(data=data)      
-        
+        serializer = LogoutSerializer(data=data)
+
         self.assertTrue(serializer.is_valid())
-        
+
         with self.assertRaises(ValidationError) as context:
             serializer.save()
 
         # Check the error message for an invalid token
         self.assertEqual(str(context.exception.detail[0]), "Token is invalid or expired")
-

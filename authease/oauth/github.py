@@ -25,5 +25,5 @@ class Github():
             response = requests.get("https://api.github.com/user", headers=headers)
             user_data = response.json()
             return user_data
-        except Exception as e:
-            raise AuthenticationFailed(detail="Token is invaid or has expired")
+        except requests.RequestException:
+            raise AuthenticationFailed(detail="Token is invalid or has expired")

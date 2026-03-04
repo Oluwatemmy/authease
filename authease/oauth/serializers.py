@@ -13,12 +13,12 @@ class GoogleSignInSerializer(serializers.Serializer):
 
         try:
             user_id = google_user_data["sub"]
-        except:
+        except (KeyError, TypeError):
             raise serializers.ValidationError("This token is invalid or has expired")
-        
+
         if google_user_data['aud'] != settings.GOOGLE_CLIENT_ID:
             raise AuthenticationFailed(detail="Could not verify user")
-        
+
         email = google_user_data['email']
         first_name = google_user_data['given_name']
         last_name = google_user_data['family_name']
@@ -34,17 +34,15 @@ class GithubOauthSerializer(serializers.Serializer):
         access_token = Github.exchange_code_for_token(code)
         if access_token:
             user = Github.retrieve_github_user(access_token)
-            print(user)
-            full_name = user["name"]
-            email = user["email"]
-            print(email)
-            names = full_name.split(" ")
-            first_name = names[1]
-            last_name = names[0]
+            full_name = user.get("name") or ""
+            email = user.get("email")
+            if not email:
+                raise ValidationError("A public email is required on your GitHub account")
+            names = full_name.split(" ", 1)
+            first_name = names[0] if names[0] else email.split("@")[0]
+            last_name = names[1] if len(names) > 1 else ""
             provider = 'github'
             return register_social_user(provider, email, first_name, last_name)
 
         else:
             raise ValidationError("Token is invalid or has expired")
-
-

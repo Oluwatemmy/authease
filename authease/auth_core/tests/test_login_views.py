@@ -1,15 +1,16 @@
 from django.core import mail
+from django.core.cache import cache
 from django.urls import reverse
 from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
 from authease.auth_core.models import User, OneTimePassword
-from django.core import mail
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError, TokenBackendError
 
 class LoginUserViewTests(TestCase):
     def setUp(self):
+        cache.clear()
         self.client = APIClient()
 
         self.login_url = reverse('login')  # the login url has been saved as 'login'
@@ -97,6 +98,7 @@ class LoginUserViewTests(TestCase):
 
 class LogoutViewTests(TestCase):
     def setUp(self):
+        cache.clear()
         self.client = APIClient()
 
         self.logout_url = reverse('logout')  # Ensure you use the correct URL name
@@ -191,6 +193,7 @@ class LogoutViewTests(TestCase):
 
 class TestAuthenticationViewTests(TestCase):
     def setUp(self):
+        cache.clear()
         self.client = APIClient()
 
         self.test_auth_url = reverse('test-auth')  # Ensure you use the correct URL name
@@ -208,7 +211,7 @@ class TestAuthenticationViewTests(TestCase):
         self.user.save()
 
         self.client.login(email='testuser@example.com', password='testpassword123')  # Log in to get a token
-        
+
     def test_authentication_success(self):
         """
         Test access to an authenticated view.
@@ -229,15 +232,14 @@ class TestAuthenticationViewTests(TestCase):
 
         response = self.client.get(self.test_auth_url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['message'], "Hello, authenticated user!")
+        self.assertEqual(response.data['detail'], f"Hello, {self.user.first_name} {self.user.last_name}!")
 
     def test_authentication_failure(self):
         """
         Test access to an authenticated view without authentication.
         """
         self.client.logout()  # Log out the user
-        
+
         response = self.client.get(self.test_auth_url, format='json')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(response.data['detail'], 'Authentication credentials were not provided.')
-
