@@ -54,11 +54,22 @@ Custom `UserManager` in `auth_core/manager.py` handles `create_user()`/`create_s
 
 ### Views
 
-All views inherit from DRF's `GenericAPIView`. Split across two files in `auth_core/views/`:
+**API views** (DRF `GenericAPIView`, JWT-based) — split across two files in `auth_core/views/`:
 - `authentication_views.py` — Register (`@transaction.atomic`), VerifyUserEmail, Login, ResendOTP, ChangePassword, TestAuthentication, Logout
 - `password_views.py` — PasswordResetRequest, PasswordResetConfirm, SetNewPassword
 
 OAuth views in `oauth/views.py`: GoogleSignInView, GithubSignInView.
+
+**Frontend views** (Django function views, session-based) — in `auth_core/frontend_views.py`:
+- `register_view`, `verify_email_view`, `resend_otp_view`, `login_view`, `logout_view`
+- `password_reset_request_view`, `password_reset_confirm_view`
+- `settings_view`, `update_profile_view`, `change_password_view`
+
+URL patterns in `auth_core/frontend_urls.py`, included via `path('accounts/', include('authease.auth_core.frontend_urls'))`.
+
+Templates in `auth_core/templates/authease/` (namespaced, Bootstrap 5). All extend `authease/base.html` which consumers can override. The settings page auto-detects extra fields on custom user models via `_get_extra_profile_fields()` (compares concrete model fields against `AbstractAutheaseUser` fields).
+
+Frontend views reuse existing utilities (`send_code_to_user`, `send_password_reset_email`) and models (`OneTimePassword`, `PasswordResetToken`). They use `get_user_model()` everywhere.
 
 ### Conventions
 
@@ -83,13 +94,20 @@ Both use Django template rendering from `auth_core/templates/email/`.
 
 ### API Endpoints
 
-Auth core routes (typically mounted at `auth/`):
+Auth core API routes (typically mounted at `auth/`):
 - `POST register/`, `POST verify_email/` (OTP in request body), `POST resend_otp/`, `POST login/`, `GET test_auth/`
 - `POST password_reset/`, `GET password_reset_confirm/<uidb64>/<token>/`, `PATCH set_new_password/`
 - `POST change_password/` (authenticated), `POST logout/`, `POST token/refresh/`
 
 OAuth routes (typically mounted at `oauth/`):
 - `POST google/`, `POST github/`
+
+### Frontend Endpoints
+
+Frontend routes (typically mounted at `accounts/`):
+- `register/`, `verify-email/`, `resend-otp/`, `login/`, `logout/`
+- `reset-password/`, `reset-password-confirm/<uidb64>/<token>/`
+- `settings/`, `settings/profile/`, `settings/password/`
 
 ## Required Django Settings (for consuming projects)
 

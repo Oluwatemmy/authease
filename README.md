@@ -26,6 +26,7 @@ Authease is a lightweight, flexible authentication package for Django applicatio
 - **Password Change**: Authenticated users can change their password securely.
 - **Rate Limiting / Throttling**: Built-in throttle classes for login, password reset, and OTP verification to prevent abuse.
 - **OAuth Integration**: Support for Google and GitHub OAuth for social login.
+- **Template-Based Frontend**: Optional pre-built Django template views with Bootstrap 5 — register, login, email verification, password reset, settings page — ready to use with one line in `urls.py`.
 - **Customizable Security**: Works with Django's authentication backend and supports JWT for session and token-based authentication.
 - **Dynamic Password Generation**: Automatically generates secure passwords for social login users.
 - **Extensible User Model**: Provides an abstract base user class (`AbstractAutheaseUser`) that you can extend with custom fields while keeping all authease functionality.
@@ -230,6 +231,39 @@ If you want to set up specific routes individually, you can include each view as
   ]
   ```
 
+
+### 3. Template-Based Frontend (Optional)
+
+If you're building a Django app with server-rendered templates (not a REST API), authease provides a complete set of pre-built views with Bootstrap 5 styling. Add one line to your `urls.py`:
+
+```python
+urlpatterns = [
+    path('accounts/', include('authease.auth_core.frontend_urls')),
+]
+```
+
+This gives you the following pages out of the box:
+
+| URL | Name | Description |
+|-----|------|-------------|
+| `accounts/register/` | `authease-register` | Registration form |
+| `accounts/verify-email/` | `authease-verify-email` | OTP verification with countdown timer |
+| `accounts/resend-otp/` | `authease-resend-otp` | Resend OTP (with cooldown) |
+| `accounts/login/` | `authease-login` | Login with session auth |
+| `accounts/logout/` | `authease-logout` | Logout and redirect |
+| `accounts/reset-password/` | `authease-password-reset` | Request password reset email |
+| `accounts/reset-password-confirm/<uidb64>/<token>/` | `authease-password-reset-confirm` | Set new password from reset link |
+| `accounts/settings/` | `authease-settings` | Account info, profile form, change password |
+| `accounts/settings/profile/` | `authease-update-profile` | Update profile (POST) |
+| `accounts/settings/password/` | `authease-change-password` | Change password (POST) |
+
+The frontend views use Django's session-based authentication (`django.contrib.auth.login`/`logout`) instead of JWT tokens.
+
+**Customizing templates:** All templates extend `authease/base.html`. Override any template by creating a file with the same path in your project's `templates/` directory (e.g. `templates/authease/base.html` to customize the layout).
+
+**Custom user model fields:** The settings page automatically detects extra fields on your custom user model (fields not in `AbstractAutheaseUser`) and renders form inputs for them.
+
+You can use the frontend views alongside the API views — they share the same models and utilities.
 
 - #### OAuth Integration Example
   To enable Google and GitHub OAuth in your application, include their respective views:

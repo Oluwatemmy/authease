@@ -1,0 +1,88 @@
+{% extends "authease/base.html" %}
+
+{% block title %}Account Settings{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-7">
+        <h2 class="mb-4">Account Settings</h2>
+
+        <!-- Account Info -->
+        <section class="mb-4">
+            <h4>Account Information</h4>
+            <dl class="row mb-0">
+                <dt class="col-sm-4">Email</dt>
+                <dd class="col-sm-8">{{ user.email }}</dd>
+                <dt class="col-sm-4">Verified</dt>
+                <dd class="col-sm-8">{% if user.is_verified %}Yes{% else %}No{% endif %}</dd>
+                <dt class="col-sm-4">Auth provider</dt>
+                <dd class="col-sm-8">{{ user.auth_provider }}</dd>
+                <dt class="col-sm-4">Joined</dt>
+                <dd class="col-sm-8">{{ user.date_joined|date:"N j, Y" }}</dd>
+            </dl>
+        </section>
+        <hr>
+
+        <!-- Profile Form -->
+        <section class="mb-4">
+            <h4>Profile</h4>
+            <form method="post" action="{% url 'authease-update-profile' %}">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="first_name" class="form-label">First name</label>
+                    <input type="text" class="form-control" id="first_name" name="first_name"
+                           value="{{ user.first_name }}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="last_name" class="form-label">Last name</label>
+                    <input type="text" class="form-control" id="last_name" name="last_name"
+                           value="{{ user.last_name }}" required>
+                </div>
+                {% for field in extra_fields %}
+                <div class="mb-3">
+                    <label for="{{ field.name }}" class="form-label">{{ field.label }}</label>
+                    {% if field.type == 'textarea' %}
+                    <textarea class="form-control" id="{{ field.name }}" name="{{ field.name }}"
+                              rows="3">{{ field.value|default:'' }}</textarea>
+                    {% elif field.type == 'checkbox' %}
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="{{ field.name }}" name="{{ field.name }}"
+                               {% if field.value %}checked{% endif %}>
+                    </div>
+                    {% else %}
+                    <input type="{{ field.type }}" class="form-control" id="{{ field.name }}" name="{{ field.name }}"
+                           value="{{ field.value|default:'' }}">
+                    {% endif %}
+                </div>
+                {% endfor %}
+                <button type="submit" class="btn btn-primary">Save profile</button>
+            </form>
+        </section>
+        <hr>
+
+        <!-- Change Password Form -->
+        <section class="mb-4">
+            <h4>Change Password</h4>
+            <form method="post" action="{% url 'authease-change-password' %}">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="current_password" class="form-label">Current password</label>
+                    <input type="password" class="form-control" id="current_password" name="current_password"
+                           minlength="8" required>
+                </div>
+                <div class="mb-3">
+                    <label for="new_password" class="form-label">New password</label>
+                    <input type="password" class="form-control" id="new_password" name="new_password"
+                           minlength="8" required>
+                </div>
+                <div class="mb-3">
+                    <label for="confirm_new_password" class="form-label">Confirm new password</label>
+                    <input type="password" class="form-control" id="confirm_new_password" name="confirm_new_password"
+                           minlength="8" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Change password</button>
+            </form>
+        </section>
+    </div>
+</div>
+{% endblock %}
