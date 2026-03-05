@@ -7,7 +7,8 @@ from rest_framework.response import Response
 from rest_framework.generics import GenericAPIView
 from django.utils.http import urlsafe_base64_decode
 from rest_framework.permissions import IsAuthenticated
-from authease.auth_core.models import OneTimePassword, User, PasswordResetToken
+from django.contrib.auth import get_user_model
+from authease.auth_core.models import OneTimePassword, PasswordResetToken
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import smart_str, DjangoUnicodeDecodeError
 from django.utils import timezone
@@ -142,8 +143,9 @@ class ResendOTPView(GenericAPIView):
         )
 
         try:
+            User = get_user_model()
             user = User.objects.get(email=email)
-        except User.DoesNotExist:
+        except get_user_model().DoesNotExist:
             return generic_response
 
         if user.is_verified:

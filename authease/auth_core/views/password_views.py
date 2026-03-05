@@ -2,7 +2,8 @@ import hashlib
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.generics import GenericAPIView
-from authease.auth_core.models import User, PasswordResetToken
+from django.contrib.auth import get_user_model
+from authease.auth_core.models import PasswordResetToken
 from authease.auth_core.serializers import PasswordResetRequestSerializer, SetNewPasswordSerializer
 from authease.auth_core.throttles import PasswordResetThrottle
 from django.utils.http import urlsafe_base64_decode
@@ -37,6 +38,7 @@ class PasswordResetConfirm(GenericAPIView):
                 return Response({"detail": "Invalid user ID in the reset link."}, status=status.HTTP_400_BAD_REQUEST)
 
             # Retrieve the user
+            User = get_user_model()
             user = User.objects.get(id=user_id)
 
             # Hash the received token
@@ -67,7 +69,7 @@ class PasswordResetConfirm(GenericAPIView):
                 "token": token,
             }, status=status.HTTP_200_OK)
 
-        except User.DoesNotExist:
+        except get_user_model().DoesNotExist:
             return Response({"detail": "Invalid user"}, status=status.HTTP_400_BAD_REQUEST)
 
         except (DjangoUnicodeDecodeError, ValueError):

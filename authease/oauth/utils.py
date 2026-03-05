@@ -1,5 +1,5 @@
 import string, secrets
-from authease.auth_core.models import User
+from django.contrib.auth import get_user_model
 from google.oauth2 import id_token
 from rest_framework import serializers
 from google.auth.transport import requests
@@ -27,6 +27,7 @@ class Google():
 
 
 def register_social_user(provider, email, first_name, last_name):
+    User = get_user_model()
     social_auth_password = generate_random_password()
     filtered_user_by_email = User.objects.filter(email=email)
     if filtered_user_by_email.exists():

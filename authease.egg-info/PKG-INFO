@@ -1,6 +1,39 @@
+Metadata-Version: 2.4
+Name: authease
+Version: 3.0.1
+Summary: Authease is a lightweight and flexible authentication package for Django, offering essential tools for secure user authentication, including JWT support, with minimal setup required.
+Home-page: https://github.com/Oluwatemmy/authease
+Author: Oluwaseyi Ajayi
+Author-email: oluwaseyitemitope456@gmail.com
+Project-URL: Documentation, https://github.com/Oluwatemmy/authease#readme
+Project-URL: Source, https://github.com/Oluwatemmy/authease
+Project-URL: Issues, https://github.com/Oluwatemmy/authease/issues
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Framework :: Django
+Classifier: Development Status :: 3 - Alpha
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: Django>=5.0.6
+Requires-Dist: djangorestframework>=3.15.1
+Requires-Dist: djangorestframework-simplejwt>=5.3.1
+Requires-Dist: google-api-python-client>=2.136.0
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: license-file
+Dynamic: project-url
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
+
 # Authease
 
-Authease is a lightweight, flexible authentication package for Django applications. It provides essential tools for handling user authentication, including JWT-based authentication, email verification via OTP, password reset, password change, and OAuth support — making it easy for developers to integrate into their Django projects without building an authentication system from scratch.
+Authease is a lightweight, flexible authentication package for Django applications. It provides essential tools for handling user authentication, including JWT-based authentication, email verification via OTP, password reset, password change, and OAuth support â€” making it easy for developers to integrate into their Django projects without building an authentication system from scratch.
 
 ## Table of Contents
 - [Features](#features)
@@ -28,7 +61,6 @@ Authease is a lightweight, flexible authentication package for Django applicatio
 - **OAuth Integration**: Support for Google and GitHub OAuth for social login.
 - **Customizable Security**: Works with Django's authentication backend and supports JWT for session and token-based authentication.
 - **Dynamic Password Generation**: Automatically generates secure passwords for social login users.
-- **Extensible User Model**: Provides an abstract base user class (`AbstractAutheaseUser`) that you can extend with custom fields while keeping all authease functionality.
 - **Easy Setup & Integration**: Minimal setup with high customizability to suit various Django project needs.
 
 ## Requirements
@@ -65,35 +97,11 @@ INSTALLED_APPS = [
 ]
 ```
 ### 2. Update the `AUTH_USER_MODEL` Setting
-Authease provides a custom user model that must be set in your Django project. If you don't need custom fields on the user model, simply point to Authease's built-in `User`:
+Authease provides a custom user model that must be set in your Django project. In your `settings.py`, add the following line:
 ```python
 AUTH_USER_MODEL = 'auth_core.User'
 ```
 This step is essential for Authease's authentication functionalities to work properly. Ensure this is configured before running migrations or creating any user-related data in the database.
-
-#### Extending the User Model (Optional)
-If you need to add custom fields to the user model, extend `AbstractAutheaseUser` in your own app instead of using the default `User`:
-
-```python
-# myapp/models.py
-from authease.auth_core.models import AbstractAutheaseUser
-from django.db import models
-
-class CustomUser(AbstractAutheaseUser):
-    phone_number = models.CharField(max_length=20, blank=True)
-    bio = models.TextField(blank=True)
-
-    class Meta:
-        verbose_name = "User"
-        verbose_name_plural = "Users"
-```
-
-Then update your settings to point to your custom model:
-```python
-AUTH_USER_MODEL = 'myapp.CustomUser'
-```
-
-Your custom model inherits all authease fields (`email`, `first_name`, `last_name`, `is_verified`, `auth_provider`, etc.) and functionality (`tokens()`, `get_full_name`, `UserManager`) automatically.
 
 ### 3. Configure Environment Variables
 **Authease** requires several environment variables for configuration. Add the following to your `settings.py` or `.env` file:
@@ -158,9 +166,9 @@ REST_FRAMEWORK = {
 }
 ```
 These rates are customizable. The throttles are applied to:
-- `login` — Login endpoint
-- `password_reset` — Password reset request endpoint
-- `otp_verify` — Email verification (OTP) endpoint
+- `login` â€” Login endpoint
+- `password_reset` â€” Password reset request endpoint
+- `otp_verify` â€” Email verification (OTP) endpoint
 
 ### 8. Migrate Database
 

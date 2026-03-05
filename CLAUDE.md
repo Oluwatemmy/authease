@@ -36,16 +36,21 @@ Test files: `test_models.py`, `test_serializers.py`, `test_login_views.py`, `tes
 - **`authease.auth_core`** — Email/password authentication: registration, login, email verification (OTP), password reset, password change, OTP resend, logout, JWT token management.
 - **`authease.oauth`** — Social authentication via Google and GitHub OAuth. Creates users automatically on first social login.
 
-### Custom User Model
+### Custom User Model (Extensible)
 
-`auth_core.User` extends `AbstractBaseUser + PermissionsMixin` with `email` as `USERNAME_FIELD`. Key custom fields: `is_verified`, `auth_provider` (tracks `email`/`google`/`github`/`facebook`). Has a `tokens()` method that returns JWT access/refresh pair via simplejwt's `RefreshToken`. `get_full_name` is a `@property`, not a method call.
+The user model is split into an abstract base and a concrete default:
 
-Custom `UserManager` in `auth_core/manager.py` handles `create_user()`/`create_superuser()`.
+- **`AbstractAutheaseUser`** — Abstract base class extending `AbstractBaseUser + PermissionsMixin` with `email` as `USERNAME_FIELD`. Key custom fields: `is_verified`, `auth_provider` (tracks `email`/`google`/`github`/`facebook`). Has a `tokens()` method that returns JWT access/refresh pair via simplejwt's `RefreshToken`. `get_full_name` is a `@property`, not a method call. Consumers can extend this to add custom fields.
+- **`User(AbstractAutheaseUser)`** — Concrete default model with `Meta: swappable = 'AUTH_USER_MODEL'`. Used when consumers set `AUTH_USER_MODEL = 'auth_core.User'`.
+
+All internal code uses `get_user_model()` / `settings.AUTH_USER_MODEL` instead of importing `User` directly, so swapping works correctly.
+
+Custom `UserManager` in `auth_core/manager.py` handles `create_user()`/`create_superuser()`. It is assigned on `AbstractAutheaseUser`, so custom subclasses inherit it.
 
 ### Supporting Models
 
-- **`OneTimePassword`** — OTP (OneToOne to User), configurable length via `AUTHEASE_OTP_LENGTH` (default 6). `is_expired()` uses `AUTHEASE_OTP_EXPIRY_MINUTES` setting (default 15).
-- **`PasswordResetToken`** — Hashed token storage (OneToOne to User) for password reset flow.
+- **`OneTimePassword`** — OTP (OneToOne to `settings.AUTH_USER_MODEL`), configurable length via `AUTHEASE_OTP_LENGTH` (default 6). `is_expired()` uses `AUTHEASE_OTP_EXPIRY_MINUTES` setting (default 15).
+- **`PasswordResetToken`** — Hashed token storage (OneToOne to `settings.AUTH_USER_MODEL`) for password reset flow.
 
 ### Views
 
@@ -88,7 +93,7 @@ OAuth routes (typically mounted at `oauth/`):
 
 ## Required Django Settings (for consuming projects)
 
-`AUTH_USER_MODEL = 'auth_core.User'`, plus email config (`EMAIL_HOST`, etc.), `SITE_NAME`, `SITE_URL`, `PASSWORD_RESET_TIMEOUT`, and OAuth credentials (`GOOGLE_CLIENT_ID`, `GITHUB_CLIENT_ID`, etc.).
+`AUTH_USER_MODEL = 'auth_core.User'` (or a custom model extending `AbstractAutheaseUser`), plus email config (`EMAIL_HOST`, etc.), `SITE_NAME`, `SITE_URL`, `PASSWORD_RESET_TIMEOUT`, and OAuth credentials (`GOOGLE_CLIENT_ID`, `GITHUB_CLIENT_ID`, etc.).
 
 Optional: `AUTHEASE_OTP_LENGTH` (default 6), `AUTHEASE_OTP_EXPIRY_MINUTES` (default 15).
 

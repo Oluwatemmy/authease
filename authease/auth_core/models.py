@@ -1,11 +1,10 @@
+from django.conf import settings
 from django.db import models
 from .manager import UserManager
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
-
-# Create your models here.
 
 AUTH_PROVIDERS = {
     'email': 'email',
@@ -14,7 +13,12 @@ AUTH_PROVIDERS = {
     'facebook': 'facebook'
 }
 
-class User(AbstractBaseUser, PermissionsMixin):
+
+class AbstractAutheaseUser(AbstractBaseUser, PermissionsMixin):
+    """
+    Abstract base user model for authease. Extend this class to add custom
+    fields while retaining authease's authentication functionality.
+    """
     # Abstractbaseuser has password, last_login, is_active by default
 
     email = models.EmailField(unique=True, max_length=255, verbose_name= _("Email Address"))
@@ -46,11 +50,11 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
-    
+
     @property
     def get_full_name(self):
         return f"{self.first_name} {self.last_name}"
-    
+
     def tokens(self):
         refresh = RefreshToken.for_user(self)
 
@@ -58,20 +62,29 @@ class User(AbstractBaseUser, PermissionsMixin):
             'refresh': str(refresh),
             'access': str(refresh.access_token)
         }
-    
+
+    class Meta:
+        abstract = True
+
+
+class User(AbstractAutheaseUser):
+    """
+    Default concrete user model. If you need custom fields, extend
+    AbstractAutheaseUser in your own app and set AUTH_USER_MODEL accordingly.
+    """
     class Meta:
         verbose_name = "User"
         verbose_name_plural = "Users"
+        swappable = 'AUTH_USER_MODEL'
 
 
 class OneTimePassword(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     code = models.CharField(max_length=10, unique=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)  # Automatically set timestamp when created
 
     def is_expired(self):
         """Check if the code has expired based on configurable expiration time."""
-        from django.conf import settings
         expiration_minutes = getattr(settings, 'AUTHEASE_OTP_EXPIRY_MINUTES', 15)
         expiration_time = self.created_at + timezone.timedelta(minutes=expiration_minutes)
         return timezone.now() > expiration_time
@@ -81,7 +94,7 @@ class OneTimePassword(models.Model):
 
 
 class PasswordResetToken(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="password_reset_token")
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="password_reset_token")
     token = models.CharField(max_length=100, unique=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

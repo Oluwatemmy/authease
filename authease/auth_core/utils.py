@@ -6,7 +6,8 @@ from django.utils import timezone
 logger = logging.getLogger(__name__)
 from rest_framework import serializers
 from django.core.mail import EmailMessage
-from .models import User, OneTimePassword
+from django.contrib.auth import get_user_model
+from .models import OneTimePassword
 from django.template.loader import render_to_string
 
 
@@ -19,7 +20,7 @@ def send_code_to_user(email):
     Subject = "One time passcode for Email verification"
     otp_code = generateotp()
     try:
-        user = User.objects.get(email=email)
+        user = get_user_model().objects.get(email=email)
         site_url = settings.SITE_URL
         site_name = settings.SITE_NAME
         context = {

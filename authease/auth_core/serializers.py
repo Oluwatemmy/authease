@@ -4,7 +4,8 @@ from django.urls import reverse
 from .utils import send_password_reset_email
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-from .models import User, PasswordResetToken
+from django.contrib.auth import get_user_model
+from .models import PasswordResetToken
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import smart_str, smart_bytes, force_str
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
@@ -18,8 +19,13 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     confirm_password=serializers.CharField(min_length=8, max_length=70, write_only=True)
 
     class Meta:
-        model=User
+        model = None
         fields=["email", "first_name", "last_name", "password", "confirm_password"]
+
+    def __init__(self, *args, **kwargs):
+        if self.__class__.Meta.model is None:
+            self.__class__.Meta.model = get_user_model()
+        super().__init__(*args, **kwargs)
 
     def validate(self, attrs):
         password = attrs.get("password", "")
@@ -37,6 +43,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
+        User = get_user_model()
         user = User.objects.create_user(
             email=validated_data["email"],
             first_name=validated_data["first_name"],
@@ -55,8 +62,13 @@ class LoginSerializer(serializers.ModelSerializer):
     refresh_token = serializers.CharField(max_length=255, read_only=True)
 
     class Meta:
-        model = User
+        model = None
         fields = ["email", "password", "full_name", "access_token", "refresh_token"]
+
+    def __init__(self, *args, **kwargs):
+        if self.__class__.Meta.model is None:
+            self.__class__.Meta.model = get_user_model()
+        super().__init__(*args, **kwargs)
 
     def validate(self, attrs):
         email = attrs.get("email", "")
@@ -83,12 +95,18 @@ class PasswordResetRequestSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(max_length=255)
 
     class Meta:
-        model=User
+        model = None
         fields = ["email"]
+
+    def __init__(self, *args, **kwargs):
+        if self.__class__.Meta.model is None:
+            self.__class__.Meta.model = get_user_model()
+        super().__init__(*args, **kwargs)
 
     def validate(self, attrs):
         email = attrs.get('email')
 
+        User = get_user_model()
         if User.objects.filter(email=email).exists():
             user = User.objects.get(email=email)
 
@@ -150,7 +168,7 @@ class SetNewPasswordSerializer(serializers.Serializer):
             token = attrs.get("token")
             uidb64 = attrs.get("uidb64")
             user_id = force_str(urlsafe_base64_decode(uidb64))
-            user = User.objects.get(id=user_id)
+            user = get_user_model().objects.get(id=user_id)
             if not PasswordResetTokenGenerator().check_token(user, token):
                 raise AuthenticationFailed("Password reset link is invalid or has expired. Please request a new one.", 400)
 
