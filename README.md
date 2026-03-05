@@ -26,7 +26,7 @@ Authease is a lightweight, flexible authentication package for Django applicatio
 - **Password Change**: Authenticated users can change their password securely.
 - **Rate Limiting / Throttling**: Built-in throttle classes for login, password reset, and OTP verification to prevent abuse.
 - **OAuth Integration**: Support for Google and GitHub OAuth for social login.
-- **Template-Based Frontend**: Optional pre-built Django template views with Bootstrap 5 — register, login, email verification, password reset, settings page — ready to use with one line in `urls.py`.
+- **Template-Based Frontend**: Optional minimal Django template views (session-based auth) for register, login, email verification, password reset, and account settings — ready to use with one line in `urls.py`. Templates are intentionally bare-bones so you can wrap them in your own site layout.
 - **Customizable Security**: Works with Django's authentication backend and supports JWT for session and token-based authentication.
 - **Dynamic Password Generation**: Automatically generates secure passwords for social login users.
 - **Extensible User Model**: Provides an abstract base user class (`AbstractAutheaseUser`) that you can extend with custom fields while keeping all authease functionality.
@@ -234,7 +234,9 @@ If you want to set up specific routes individually, you can include each view as
 
 ### 3. Template-Based Frontend (Optional)
 
-If you're building a Django app with server-rendered templates (not a REST API), authease provides a complete set of pre-built views with Bootstrap 5 styling. Add one line to your `urls.py`:
+If you're building a Django app with server-rendered templates (not a REST API), authease provides a set of minimal, ready-to-use views with session-based authentication. The included templates use Bootstrap 5 for basic form styling but are intentionally bare-bones — no navbar, no footer, no branding — so they work for any type of project (ecommerce, blog, SaaS, etc.). You simply override `authease/base.html` to wrap them in your own site layout.
+
+Add one line to your `urls.py`:
 
 ```python
 urlpatterns = [
@@ -259,11 +261,26 @@ This gives you the following pages out of the box:
 
 The frontend views use Django's session-based authentication (`django.contrib.auth.login`/`logout`) instead of JWT tokens.
 
-**Customizing templates:** All templates extend `authease/base.html`. Override any template by creating a file with the same path in your project's `templates/` directory (e.g. `templates/authease/base.html` to customize the layout).
+**Customizing templates:** All templates extend `authease/base.html`, which provides empty blocks for `{% block navbar %}`, `{% block footer %}`, and `{% block content %}`. To add your own site layout, create `templates/authease/base.html` in your project and define those blocks:
 
-**Custom user model fields:** The settings page automatically detects extra fields on your custom user model (fields not in `AbstractAutheaseUser`) and renders form inputs for them.
+```html
+<!-- your_project/templates/authease/base.html -->
+{% extends "your_base.html" %}
 
-You can use the frontend views alongside the API views — they share the same models and utilities.
+{% block content %}
+    {% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
+
+    {% block content %}{% endblock %}
+{% endblock %}
+```
+
+**Custom user model fields:** The settings page automatically detects extra fields on your custom user model (fields not in `AbstractAutheaseUser`) and renders form inputs for them — no configuration needed.
+
+**Using alongside the API:** The frontend views share the same models and utilities as the API views. You can mount both in the same project (e.g. `auth/api/` for the REST API and `accounts/` for template views).
 
 - #### OAuth Integration Example
   To enable Google and GitHub OAuth in your application, include their respective views:

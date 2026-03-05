@@ -67,7 +67,7 @@ OAuth views in `oauth/views.py`: GoogleSignInView, GithubSignInView.
 
 URL patterns in `auth_core/frontend_urls.py`, included via `path('accounts/', include('authease.auth_core.frontend_urls'))`.
 
-Templates in `auth_core/templates/authease/` (namespaced, Bootstrap 5). All extend `authease/base.html` which consumers can override. The settings page auto-detects extra fields on custom user models via `_get_extra_profile_fields()` (compares concrete model fields against `AbstractAutheaseUser` fields).
+Templates in `auth_core/templates/authease/` (namespaced). Intentionally minimal — Bootstrap 5 for basic form styling only, no navbar/footer/branding. `base.html` provides empty blocks (`navbar`, `footer`, `content`) for consumers to override with their own site layout. The settings page auto-detects extra fields on custom user models via `_get_extra_profile_fields()` (compares concrete model fields against `AbstractAutheaseUser` fields).
 
 Frontend views reuse existing utilities (`send_code_to_user`, `send_password_reset_email`) and models (`OneTimePassword`, `PasswordResetToken`). They use `get_user_model()` everywhere.
 
