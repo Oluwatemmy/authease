@@ -26,7 +26,7 @@
         <!-- Profile Form -->
         <section class="mb-4">
             <h4>Profile</h4>
-            <form method="post" action="{% url 'authease-update-profile' %}">
+            <form method="post" action="{% url 'authease-update-profile' %}" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="mb-3">
                     <label for="first_name" class="form-label">First name</label>
@@ -49,6 +49,11 @@
                         <input type="checkbox" class="form-check-input" id="{{ field.name }}" name="{{ field.name }}"
                                {% if field.value %}checked{% endif %}>
                     </div>
+                    {% elif field.type == 'file' %}
+                    {% if field.value %}
+                    <p class="form-text mb-1">Current: {{ field.value.name }}</p>
+                    {% endif %}
+                    <input type="file" class="form-control" id="{{ field.name }}" name="{{ field.name }}">
                     {% else %}
                     <input type="{{ field.type }}" class="form-control" id="{{ field.name }}" name="{{ field.name }}"
                            value="{{ field.value|default:'' }}">

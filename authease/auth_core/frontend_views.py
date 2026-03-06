@@ -394,16 +394,22 @@ def update_profile_view(request):
     user.last_name = last_name
 
     # Update extra fields
+    from django.db import models
     for field in _get_extra_profile_fields():
-        value = request.POST.get(field.name)
-        if value is not None:
-            if hasattr(field, 'to_python'):
-                try:
-                    value = field.to_python(value)
-                except (ValidationError, ValueError):
-                    messages.error(request, f"Invalid value for {field.verbose_name}.")
-                    return redirect('authease-settings')
-            setattr(user, field.name, value)
+        if isinstance(field, (models.FileField, models.ImageField)):
+            file = request.FILES.get(field.name)
+            if file:
+                setattr(user, field.name, file)
+        else:
+            value = request.POST.get(field.name)
+            if value is not None:
+                if hasattr(field, 'to_python'):
+                    try:
+                        value = field.to_python(value)
+                    except (ValidationError, ValueError):
+                        messages.error(request, f"Invalid value for {field.verbose_name}.")
+                        return redirect('authease-settings')
+                setattr(user, field.name, value)
 
     try:
         user.full_clean(exclude=['password'])
@@ -462,6 +468,8 @@ def _get_html_input_type(field):
     """Map Django model field types to HTML input types."""
     from django.db import models
     type_map = {
+        models.FileField: 'file',
+        models.ImageField: 'file',
         models.EmailField: 'email',
         models.URLField: 'url',
         models.IntegerField: 'number',
