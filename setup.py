@@ -5,7 +5,7 @@ with open('README.md', 'r') as f:
 
 setup(
     name='authease',       # Package name
-    version='3.2.3',        # Version of the package
+    version='3.2.4',        # Version of the package
     description='Authease is a lightweight and flexible authentication package for Django, offering essential tools for secure user authentication, including JWT support, with minimal setup required.',
     author='Oluwaseyi Ajayi', 
     author_email='oluwaseyitemitope456@gmail.com',

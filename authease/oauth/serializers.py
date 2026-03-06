@@ -4,6 +4,8 @@ from .github import Github
 from .utils import Google, register_social_user
 from rest_framework.exceptions import AuthenticationFailed, ValidationError
 
+from authease.auth_core.models import AUTH_PROVIDERS
+
 
 class GoogleSignInSerializer(serializers.Serializer):
     access_token = serializers.CharField(min_length=10)
@@ -20,11 +22,10 @@ class GoogleSignInSerializer(serializers.Serializer):
             raise AuthenticationFailed(detail="Could not verify user")
 
         email = google_user_data['email']
-        first_name = google_user_data['given_name']
-        last_name = google_user_data['family_name']
-        provider = 'google'
+        first_name = google_user_data.get('given_name', email.split('@')[0])
+        last_name = google_user_data.get('family_name', '')
+        provider = AUTH_PROVIDERS['google']
         return register_social_user(provider, email, first_name, last_name)
-
 
 
 class GithubOauthSerializer(serializers.Serializer):
@@ -41,7 +42,7 @@ class GithubOauthSerializer(serializers.Serializer):
             names = full_name.split(" ", 1)
             first_name = names[0] if names[0] else email.split("@")[0]
             last_name = names[1] if len(names) > 1 else ""
-            provider = 'github'
+            provider = AUTH_PROVIDERS['github']
             return register_social_user(provider, email, first_name, last_name)
 
         else:

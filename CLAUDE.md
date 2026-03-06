@@ -88,9 +88,11 @@ Both use Django template rendering from `auth_core/templates/email/`.
 
 ### OAuth Flow (`oauth/`)
 
-- `utils.py` — `Google.validate()` for token validation, `register_social_user()` for auto-registration, `generate_random_password()`.
-- `github.py` — `Github.exchange_code_for_token()` and `Github.retrieve_github_user()` (static methods).
+- `utils.py` — `Google.validate()` for token validation, `register_social_user()` for auto-registration (`@transaction.atomic`), `generate_random_password()`. Provider names use `AUTH_PROVIDERS` constants from models.
+- `github.py` — `Github.exchange_code_for_token()` and `Github.retrieve_github_user()` (static methods). Both have timeouts (10s), HTTP status checking, JSON error handling, and logging.
 - `serializers.py` — `GoogleSignInSerializer`, `GithubOauthSerializer` handle validation and user lookup/creation. GitHub requires a public email on the account.
+
+**Cross-provider login:** If a user registered with one method (e.g. email) and later tries OAuth (e.g. Google) with the same email, they are allowed in **if their account is verified** — since both sides have confirmed email ownership. Unverified accounts are blocked with a message to verify first. The `auth_provider` field tracks the original registration method and is not overwritten.
 
 ### API Endpoints
 

@@ -282,16 +282,19 @@ The frontend views use Django's session-based authentication (`django.contrib.au
 
 **Using alongside the API:** The frontend views share the same models and utilities as the API views. You can mount both in the same project (e.g. `auth/api/` for the REST API and `accounts/` for template views).
 
-- #### OAuth Integration Example
-  To enable Google and GitHub OAuth in your application, include their respective views:
-  ```python
-  from authease.oauth.views import GoogleSignInView, GithubSignInView
+### 4. OAuth Integration
 
-  urlpatterns = [
-      path('auth/google/', GoogleSignInView.as_view(), name='google_auth'),
-      path('auth/github/', GithubSignInView.as_view(), name='github_auth'),
-  ]
-  ```
+To enable Google and GitHub OAuth in your application, include their respective views:
+```python
+from authease.oauth.views import GoogleSignInView, GithubSignInView
+
+urlpatterns = [
+    path('auth/google/', GoogleSignInView.as_view(), name='google_auth'),
+    path('auth/github/', GithubSignInView.as_view(), name='github_auth'),
+]
+```
+
+**Cross-provider login:** If a user registers with one method (e.g. email/password) and later signs in via OAuth (e.g. Google) using the same email, authease allows it as long as the account is verified — since both sides have confirmed email ownership. Unverified accounts are blocked with a message to verify first or use their original login method.
 
 ## API Endpoints
 
