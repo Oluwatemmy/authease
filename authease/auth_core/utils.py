@@ -28,6 +28,7 @@ def send_code_to_user(email):
             'site_name': site_name,
             'site_url': site_url,
             'otp_code': otp_code,
+            'otp_expiry_minutes': getattr(settings, 'AUTHEASE_OTP_EXPIRY_MINUTES', 15),
             'current_year': timezone.now().year,
         }
 
