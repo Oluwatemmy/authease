@@ -96,13 +96,14 @@ class VerifyUserEmail(GenericAPIView):
                     status=status.HTTP_200_OK,
                 )
             return Response(
-                {"detail": "User is already verified"},
-                status=status.HTTP_400_BAD_REQUEST,
+                {"detail": "Account email verified successfully"},
+                status=status.HTTP_200_OK,
             )
 
         except OneTimePassword.DoesNotExist:
             return Response(
-                {"detail": "Passcode does not exist"}, status=status.HTTP_404_NOT_FOUND
+                {"detail": "Invalid or expired verification code."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
 
@@ -157,10 +158,8 @@ class ResendOTPView(GenericAPIView):
             existing_otp = OneTimePassword.objects.get(user=user)
             elapsed = (timezone.now() - existing_otp.created_at).total_seconds()
             if elapsed < cooldown:
-                return Response(
-                    {"detail": "Please wait before requesting a new OTP."},
-                    status=status.HTTP_429_TOO_MANY_REQUESTS,
-                )
+                # Return the same generic response to prevent enumeration
+                return generic_response
             existing_otp.delete()
         except OneTimePassword.DoesNotExist:
             pass

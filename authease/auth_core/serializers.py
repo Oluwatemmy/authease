@@ -21,11 +21,20 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = None
         fields=["email", "first_name", "last_name", "password", "confirm_password"]
+        extra_kwargs = {
+            'email': {'validators': []},  # We handle uniqueness in validate_email
+        }
 
     def __init__(self, *args, **kwargs):
         if self.__class__.Meta.model is None:
             self.__class__.Meta.model = get_user_model()
         super().__init__(*args, **kwargs)
+
+    def validate_email(self, value):
+        User = get_user_model()
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Unable to register with this email address.")
+        return value
 
     def validate(self, attrs):
         password = attrs.get("password", "")
@@ -80,7 +89,9 @@ class LoginSerializer(serializers.ModelSerializer):
             raise AuthenticationFailed("Invalid email or password. Please try again")
 
         if not user.is_verified:
-            raise AuthenticationFailed("Your account is not verified. Please verify your email address")
+            raise AuthenticationFailed(
+                {"detail": "Email verification required.", "code": "not_verified"}
+            )
         token = user.tokens()
 
         return {

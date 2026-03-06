@@ -82,8 +82,10 @@ def register_view(request):
 
         UserModel = _get_user_model()
         if UserModel.objects.filter(email=email).exists():
-            messages.error(request, "An account with this email already exists.")
-            return render(request, 'authease/register.html', context)
+            # Return the same success message to prevent email enumeration
+            request.session['authease_verify_email'] = email
+            messages.success(request, "If this email is available, a verification code has been sent.")
+            return redirect('authease-verify-email')
 
         try:
             with transaction.atomic():
@@ -99,7 +101,7 @@ def register_view(request):
             return render(request, 'authease/register.html', context)
 
         request.session['authease_verify_email'] = email
-        messages.success(request, f"Hi {first_name}, a verification code has been sent to your email.")
+        messages.success(request, "If this email is available, a verification code has been sent.")
         return redirect('authease-verify-email')
 
     return render(request, 'authease/register.html')
@@ -173,8 +175,8 @@ def resend_otp_view(request):
         return redirect('authease-verify-email')
 
     if user.is_verified:
-        messages.info(request, "This account is already verified.")
-        return redirect('authease-login')
+        messages.info(request, "If an unverified account with this email exists, a new code has been sent.")
+        return redirect('authease-verify-email')
 
     try:
         existing_otp = OneTimePassword.objects.get(user=user)
@@ -225,7 +227,7 @@ def login_view(request):
                     send_code_to_user(user.email)
             except OneTimePassword.DoesNotExist:
                 send_code_to_user(user.email)
-            messages.warning(request, "Your account is not verified. Please verify your email.")
+            messages.info(request, "Please verify your email to continue.")
             return redirect('authease-verify-email')
 
         login(request, user)
